@@ -1,0 +1,7 @@
+# XAMPP 
+/public/uploads/ 
+/data/ 
+*.log 
+.htaccess 
+vendor/ 
+composer.lock 
