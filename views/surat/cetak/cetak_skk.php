@@ -24,8 +24,12 @@ function skk_format_date_id($date)
 $tujuan = skk_pick_value($isiSurat, ['Kepada', 'Tujuan'], '');
 $nama = skk_pick_value($isiSurat, ['Nama'], '');
 $jabatan = skk_pick_value($isiSurat, ['Jabatan'], '');
+$positions = skk_pick_value($isiSurat, ['Posisi'], '');
 $project = skk_pick_value($isiSurat, ['Project', 'Proyek'], 'Drilling at PT . Greatwall Drilling Asia Pacific');
 $startDate = skk_pick_value($isiSurat, ['Mulai Bekerja', 'Start Date'], '');
+
+$displayName = $nama ?: ($tujuan ?: 'Crew terkait');
+$displayJabatan = $jabatan ?: ($positions ?: '-');
 
 $startDateText = $startDate ? skk_format_date_id($startDate) : '';
 $letterDateText = skk_format_date_id($tanggalMoc);
@@ -93,12 +97,12 @@ $letterDateText = skk_format_date_id($tanggalMoc);
                     <tr>
                         <td class="label">Nama</td>
                         <td class="colon">:</td>
-                        <td><strong><?= htmlspecialchars($nama ?: '___________________') ?></strong></td>
+                        <td><strong><?= htmlspecialchars($displayName) ?></strong></td>
                     </tr>
                     <tr>
                         <td class="label-en">Name</td>
                         <td class="colon"></td>
-                        <td class="value-en"><?= htmlspecialchars($nama ?: '___________________') ?></td>
+                        <td class="value-en"><?= htmlspecialchars($displayName) ?></td>
                     </tr>
                     <tr>
                         <td class="label">Proyek & Lokasi</td>
@@ -113,12 +117,12 @@ $letterDateText = skk_format_date_id($tanggalMoc);
                     <tr>
                         <td class="label">Jabatan</td>
                         <td class="colon">:</td>
-                        <td><?= htmlspecialchars($jabatan ?: '___________________') ?></td>
+                        <td><?= htmlspecialchars($displayJabatan) ?></td>
                     </tr>
                     <tr>
                         <td class="label-en">Classification</td>
                         <td class="colon"></td>
-                        <td class="value-en"><?= htmlspecialchars($jabatan ?: '___________________') ?></td>
+                        <td class="value-en"><?= htmlspecialchars($displayJabatan) ?></td>
                     </tr>
                 </table>
 

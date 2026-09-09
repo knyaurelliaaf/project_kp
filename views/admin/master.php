@@ -4,15 +4,15 @@
     <h4><i class="fas fa-database"></i> Master Data</h4>
 </div>
 
-<div class="row">
+<div class="row g-3">
     <!-- JENIS SURAT -->
-    <div class="col-md-7">
+    <div class="col-xl-8 col-lg-7 col-md-12">
         <div class="table-card">
             <div class="table-head">
                 <div class="chart-title"><i class="fas fa-envelope chart-icon-red"></i> Jenis Surat</div>
             </div>
             <div class="tw">
-                <table>
+                <table class="master-jenis-table">
                     <thead>
                         <tr>
                             <th>Kode</th>
@@ -26,10 +26,10 @@
                         <?php if ($jenis_surat && $jenis_surat->num_rows > 0): ?>
                             <?php while ($j = $jenis_surat->fetch_assoc()): ?>
                             <tr>
-                                <td><span class="rtag"><?= $j['kode'] ?></span></td>
-                                <td><strong><?= $j['nama_surat'] ?></strong></td>
-                                <td class="td-sm"><?= $j['format_nomor'] ?></td>
-                                <td class="td-sm td-ellipsis"><?= $j['keterangan'] ?? '-' ?></td>
+                                <td><span class="rtag"><?= htmlspecialchars($j['kode']) ?></span></td>
+                                <td><strong><?= htmlspecialchars($j['nama_surat']) ?></strong></td>
+                                <td class="format-cell"><code><?= htmlspecialchars($j['format_nomor']) ?></code></td>
+                                <td class="td-sm"><?= htmlspecialchars($j['keterangan'] ?? '-') ?></td>
                                 <td>
                                     <a href="<?= BASE_URL ?>/admin/deleteJenisSurat/<?= $j['id_jenis'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus jenis surat ini?')"><i class="fas fa-trash"></i></a>
                                 </td>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- TAMBAH JENIS SURAT -->
-    <div class="col-md-5">
+    <div class="col-xl-4 col-lg-5 col-md-12">
         <div class="card-custom">
             <div class="card-body p-4">
                 <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Tambah Jenis Surat</h5>

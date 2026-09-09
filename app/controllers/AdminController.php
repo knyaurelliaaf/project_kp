@@ -57,6 +57,50 @@ class AdminController extends Controller {
         $this->redirect('admin/users');
     }
 
+    // UPDATE USER (GANTI EMAIL & RESET PASSWORD)
+    public function updateUser($id) {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            $this->redirect('admin/users');
+        }
+        
+        $userModel = $this->model('UserModel');
+        $user = $userModel->find($id);
+        
+        if (!$user) {
+            Helper::setFlash('error', 'User tidak ditemukan!');
+            $this->redirect('admin/users');
+        }
+        
+        $nama = $_POST['nama'] ?? $user['nama'];
+        $email = $_POST['email'] ?? $user['email'];
+        $role = $_POST['role'] ?? $user['role'];
+        
+        $updateData = [
+            'nama' => $nama,
+            'email' => $email,
+            'role' => $role
+        ];
+        
+        // Reset password jika diisi
+        if (!empty($_POST['password'])) {
+            $updateData['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        }
+        
+        $userModel->update($id, $updateData);
+        
+        Helper::setFlash('success', "Akun '{$nama}' (Email & Password) berhasil diperbarui!");
+        $this->redirect('admin/users');
+    }
+
+    // HAPUS USER
+    public function deleteUser($id) {
+        $this->requireSuperAdmin();
+        $userModel = $this->model('UserModel');
+        $userModel->delete($id);
+        Helper::setFlash('success', 'User berhasil dihapus!');
+        $this->redirect('admin/users');
+    }
+
     // Kelola Master Data
 public function master() {
     $this->requireSuperAdmin();

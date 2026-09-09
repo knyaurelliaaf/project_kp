@@ -5,7 +5,7 @@ class BadgeController extends Controller {
         $this->requireLogin();
     }
     
-    // monintorin badge
+    // monitoring badge
     public function index() {
         $badgeModel = $this->model('BadgeModel');
         $rigModel = $this->model('RigModel');
@@ -28,9 +28,12 @@ class BadgeController extends Controller {
         $badges = $badgeModel->getMonitoring($rigIds, $isAllRig, $filter_rig, $filter_status, $filter_search, $perPage, $offset);
         $rigList = $rigModel->allActive();
         
+        $expiredCount = $badgeModel->countExpired($rigIds, $isAllRig);
+        $soonCount = $badgeModel->countSoon($rigIds, $isAllRig);
+        
         $data = [
             'title' => 'Monitoring Badge',
-            'currentPage' => 'monitoring',
+            'currentPage' => 'badge',
             'badges' => $badges,
             'rigList' => $rigList,
             'isSuperAdmin' => $isSuperAdmin,
@@ -40,6 +43,8 @@ class BadgeController extends Controller {
             'page' => $page,
             'totalPages' => $totalPages,
             'totalBadges' => $totalBadges,
+            'expiredCount' => $expiredCount,
+            'soonCount' => $soonCount,
             'offset' => $offset
         ];
         $this->view('badge/index', $data);
@@ -47,17 +52,17 @@ class BadgeController extends Controller {
     
     // add
     public function create($id_crew) {
-    $badgeModel = $this->model('BadgeModel');
-    $lastBadge = $badgeModel->getLastBadge($id_crew);
-    
-    $data = [
-        'title' => 'Perpanjang Badge',
-        'currentPage' => 'crew',
-        'id_crew' => $id_crew,
-        'nomor_badge_lama' => $lastBadge['nomor_badge'] ?? ''
-    ];
-    $this->view('badge/create', $data);
-}
+        $badgeModel = $this->model('BadgeModel');
+        $lastBadge = $badgeModel->getLastBadge($id_crew);
+        
+        $data = [
+            'title' => 'Perpanjang Badge',
+            'currentPage' => 'badge',
+            'id_crew' => $id_crew,
+            'nomor_badge_lama' => $lastBadge['nomor_badge'] ?? ''
+        ];
+        $this->view('badge/create', $data);
+    }
     
     // save
     public function store() {
@@ -69,12 +74,14 @@ class BadgeController extends Controller {
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'badge_' . time() . '_' . $id_crew . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], 'public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
         
         $badgeModel->insert([
-            'id_crew' => $id_crew, 'nomor_badge' => $_POST['nomor_badge'] ?? '',
-            'tanggal_expired' => $_POST['tanggal_expired'] ?? null, 'file' => $fileName
+            'id_crew' => $id_crew, 
+            'nomor_badge' => $_POST['nomor_badge'] ?? '',
+            'tanggal_expired' => $_POST['tanggal_expired'] ?? null, 
+            'file' => $fileName
         ]);
         Helper::setFlash('success', 'Badge berhasil ditambahkan!');
         $this->redirect('crew/detail/' . $id_crew);
@@ -84,7 +91,7 @@ class BadgeController extends Controller {
     public function edit($id) {
         $badge = $this->model('BadgeModel')->find($id);
         if (!$badge) $this->redirect('crew');
-        $data = ['title' => 'Edit Badge', 'currentPage' => 'crew', 'badge' => $badge];
+        $data = ['title' => 'Edit Badge', 'currentPage' => 'badge', 'badge' => $badge];
         $this->view('badge/edit', $data);
     }
     
@@ -98,12 +105,13 @@ class BadgeController extends Controller {
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'badge_' . time() . '_' . $badge['id_crew'] . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], 'public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
         
         $badgeModel->update($id, [
             'nomor_badge' => $_POST['nomor_badge'] ?? '',
-            'tanggal_expired' => $_POST['tanggal_expired'] ?? null, 'file' => $fileName
+            'tanggal_expired' => $_POST['tanggal_expired'] ?? null, 
+            'file' => $fileName
         ]);
         Helper::setFlash('success', 'Badge berhasil diupdate!');
         $this->redirect('crew/detail/' . $badge['id_crew']);
@@ -117,6 +125,4 @@ class BadgeController extends Controller {
         Helper::setFlash('success', 'Badge berhasil dihapus!');
         $this->redirect('crew/detail/' . $id_crew);
     }
-
-    
 }

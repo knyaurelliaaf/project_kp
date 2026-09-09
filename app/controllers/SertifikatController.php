@@ -28,11 +28,13 @@ class SertifikatController extends Controller
         $offset = ($page - 1) * $perPage;
 
         $serts = $sertModel->getMonitoring($rigIds, $isAllRig, $filter_rig, $filter_status, $filter_search, $perPage, $offset);
+        $expiredCount = $sertModel->countExpired($rigIds, $isAllRig);
+        $soonCount = $sertModel->countSoon($rigIds, $isAllRig);
         $rigList = $rigModel->allActive();
 
         $data = [
             'title' => 'Monitoring Sertifikat',
-            'currentPage' => 'monitoring',
+            'currentPage' => 'sertifikat',
             'serts' => $serts,
             'rigList' => $rigList,
             'isSuperAdmin' => $isSuperAdmin,
@@ -42,6 +44,8 @@ class SertifikatController extends Controller
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'expiredCount' => $expiredCount,
+            'soonCount' => $soonCount,
             'offset' => $offset
         ];
         $this->view('sertifikat/index', $data);
@@ -49,8 +53,7 @@ class SertifikatController extends Controller
 
     public function create($id_crew)
     {
-        $data = ['title' => 'Tambah Sertifikat', 'currentPage' => 'crew', 'id_crew' => $id_crew];
-        $this->view('sertifikat/create', $data);
+        $data = ['title' => 'Tambah Sertifikat', 'currentPage' => 'sertifikat', 'id_crew' => $id_crew];
     }
 
     public function store()
@@ -63,7 +66,7 @@ class SertifikatController extends Controller
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'sert_' . time() . '_' . $id_crew . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], __DIR__ . '/../../public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
 
         $sertModel->insert([
@@ -80,7 +83,7 @@ class SertifikatController extends Controller
     {
         $sert = $this->model('SertifikatModel')->find($id);
         if (!$sert) $this->redirect('crew');
-        $data = ['title' => 'Edit Sertifikat', 'currentPage' => 'crew', 'sert' => $sert];
+        $data = ['title' => 'Edit Sertifikat', 'currentPage' => 'sertifikat', 'sert' => $sert];
         $this->view('sertifikat/edit', $data);
     }
 
@@ -100,7 +103,7 @@ class SertifikatController extends Controller
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'sert_' . time() . '_' . $sert['id_crew'] . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], __DIR__ . '/../../public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
 
         $updated = $sertModel->update($id, [

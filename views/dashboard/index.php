@@ -11,8 +11,8 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
     <div class="hero-deco"></div>
     <div class="hero-deco2"></div>
     <div class="hero-left">
-        <div class="greeting"><i class="fas fa-fire"></i> Selamat datang kembali,</div>
-        <div class="title">Crew Compliance Monitoring</div>
+        <div class="greeting"><i class="fas fa-shield-alt"></i> Crew Compliance Monitoring</div>
+        <div class="title">Welcome, <?= htmlspecialchars($nama) ?>! 👋</div>
         <div class="sub"><i class="fas fa-calendar-alt"></i> <?= $today ?> &nbsp;·&nbsp; <i class="fas fa-sync-alt"></i> Update real-time</div>
     </div>
     <div class="hero-right">
@@ -22,12 +22,12 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
             <div class="lbl">Tingkat Kepatuhan</div>
         </div>
         <div class="hero-divider"></div>
-        <div class="hero-stat">
+        <div class="hero-stat" onclick="scrollToAlert('sec-expired')" style="cursor:pointer;" title="Klik untuk lihat semua dokumen expired">
             <div class="num"><?= $totalExpired ?></div>
             <div class="lbl">Expired Hari Ini</div>
         </div>
         <div class="hero-divider"></div>
-        <div class="hero-stat">
+        <div class="hero-stat" onclick="scrollToAlert('sec-warning')" style="cursor:pointer;" title="Klik untuk lihat semua dokumen akan expired">
             <div class="num"><?= $totalWarning ?></div>
             <div class="lbl">Akan Expired</div>
         </div>
@@ -43,7 +43,7 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
         </div>
         <div>
             <div class="sc-lbl">Total Crew</div>
-            <div class="sc-val"><?= $totalCrew ?></div>
+            <div class="sc-val"><?= $totalCrewAll ?></div>
         </div>
         <div class="sc-bar">
             <div class="sc-bar-fill sc-bar-fill-navy"></div>
@@ -62,7 +62,7 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
             <div class="sc-bar-fill sc-bar-fill-blue"></div>
         </div>
     </div>
-    <div class="sc">
+    <div class="sc" onclick="scrollToAlert('sec-expired')" style="cursor:pointer;" title="Klik untuk lihat semua dokumen expired">
         <div class="sc-top">
             <div class="sc-icon ic-red"><i class="fas fa-times-circle"></i></div>
             <span class="sc-trend tr-red">Kritis</span>
@@ -75,13 +75,13 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
             <div class="sc-bar-fill sc-bar-fill-red" data-width="<?= $totalCrew > 0 ? round($totalExpired / $totalCrew * 100) : 0 ?>"></div>
         </div>
     </div>
-    <div class="sc">
+    <div class="sc" onclick="scrollToAlert('sec-warning')" style="cursor:pointer;" title="Klik untuk lihat semua dokumen akan expired">
         <div class="sc-top">
             <div class="sc-icon ic-orange"><i class="fas fa-clock"></i></div>
             <span class="sc-trend tr-orange">30 hari</span>
         </div>
         <div>
-            <div class="sc-lbl">Akan Expired</div>
+            <div class="sc-lbl">Dokumen Akan Expired</div>
             <div class="sc-val sc-val-orange"><?= $totalWarning ?></div>
         </div>
         <div class="sc-bar">
@@ -95,7 +95,7 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
         </div>
         <div>
             <div class="sc-lbl">Crew Aktif</div>
-            <div class="sc-val sc-val-green"><?= $totalCrew - $totalExpired ?></div>
+            <div class="sc-val sc-val-green"><?= $totalCrew ?></div>
         </div>
         <div class="sc-bar">
             <div class="sc-bar-fill sc-bar-fill-green" data-width="<?= $complyPercent ?>"></div>
@@ -105,39 +105,29 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
 
 <!-- COMPLIANCE RINGS -->
 <div class="ring-row">
-    <?php
-    $badgeTotal = $totalCrew > 0 ? round(($totalCrew - $expiredBadge) / $totalCrew * 100) : 100;
-    $mcuTotal = $totalCrew > 0 ? round(($totalCrew - $expiredMcu) / $totalCrew * 100) : 100;
-    $sertTotal = $totalCrew > 0 ? round(($totalCrew - $expiredSertifikat) / $totalCrew * 100) : 100;
-    $pkwtTotal = $totalCrew > 0 ? round(($totalCrew - $expiredPkwt) / $totalCrew * 100) : 100;
-    ?>
     <div class="ring-card">
         <div class="ring-wrap"><canvas id="r1" width="72" height="72"></canvas>
             <div class="ring-pct"><?= $badgeTotal ?>%</div>
         </div>
         <div class="ring-lbl">ID Badge</div>
-        <div class="ring-sub">Kepatuhan</div>
     </div>
     <div class="ring-card">
         <div class="ring-wrap"><canvas id="r2" width="72" height="72"></canvas>
             <div class="ring-pct"><?= $mcuTotal ?>%</div>
         </div>
         <div class="ring-lbl">MCU</div>
-        <div class="ring-sub">Kepatuhan</div>
     </div>
     <div class="ring-card">
         <div class="ring-wrap"><canvas id="r3" width="72" height="72"></canvas>
             <div class="ring-pct"><?= $sertTotal ?>%</div>
         </div>
         <div class="ring-lbl">Sertifikat</div>
-        <div class="ring-sub">Kepatuhan</div>
     </div>
     <div class="ring-card">
         <div class="ring-wrap"><canvas id="r4" width="72" height="72"></canvas>
             <div class="ring-pct"><?= $pkwtTotal ?>%</div>
         </div>
         <div class="ring-lbl">PKWT</div>
-        <div class="ring-sub">Kepatuhan</div>
     </div>
 </div>
 
@@ -145,69 +135,37 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
 <div class="alert-strip">
 
     <!-- EXPIRED -->
-    <div class="al al-exp">
+    <div class="al al-exp" id="sec-expired">
         <div class="al-head">
-            <div class="al-title r"><i class="fas fa-exclamation-circle"></i> Dokumen Sudah Expired</div>
+        <div class="al-title r"><i class="fas fa-exclamation-circle"></i> Dokumen Sudah Expired</div>
             <span class="al-count r"><?= $totalExpired ?> dokumen</span>
         </div>
         <div class="al-items">
-            <?php
-            $countExp = 0;
-            if ($crewExpired && $crewExpired->num_rows > 0):
-                $crewExpired->data_seek(0);
-                while ($crew = $crewExpired->fetch_assoc()):
-                    // Hitung sisa hari langsung dari tanggal, tidak andalkan nilai status dari controller
-                    $checks = [
-                        'Badge'      => $crew['badge_exp']      ?? null,
-                        'MCU'        => $crew['mcu_exp']        ?? null,
-                        'Sertifikat' => $crew['sertifikat_exp'] ?? null,
-                        'PKWT'       => $crew['pkwt_exp']       ?? null,
-                    ];
-
-                    $kategoriExp = null;
-                    $tglExp      = null;
-                    $sisaExp     = null;
-
-                    foreach ($checks as $label => $tgl):
-                        if (empty($tgl)) continue;
-                        $sisa = Helper::sisaHari($tgl);
-                        // Ambil yang paling parah (paling negatif) sebagai yang ditampilkan
-                        if ($sisa < 0 && ($sisaExp === null || $sisa < $sisaExp)):
-                            $kategoriExp = $label;
-                            $tglExp      = $tgl;
-                            $sisaExp     = $sisa;
-                        endif;
-                    endforeach;
-
-                    if ($kategoriExp !== null && $countExp < 3):
-                        $countExp++;
-                        $init = strtoupper(substr($crew['nama'], 0, 2));
-                        $hariLewat = abs($sisaExp);
+            <?php if (!empty($listExpiredDocs)): ?>
+                <?php foreach ($listExpiredDocs as $doc):
+                    $init = strtoupper(substr($doc['nama'], 0, 2));
+                    $hariLewat = abs($doc['sisa_hari']);
                 ?>
-                        <div class="al-row">
-                            <div class="al-av av-r"><?= $init ?></div>
-                            <div class="al-info">
-                                <div class="al-name"><?= $crew['nama'] ?></div>
-                                <div class="al-meta">
-                                    <i class="fas fa-id-card"></i>
-                                    <?= $kategoriExp ?> — Expired <?= Helper::formatDate($tglExp) ?>
-                                    <span class="text-danger">(<?= $hariLewat ?> hari lalu)</span>
-                                </div>
-                            </div>
-                            <div class="al-right">
-                                <div class="al-rig"><?= $crew['kode_rig'] ?></div>
-                                <span class="al-tag tag-exp">EXPIRED</span>
+                    <div class="al-row ep-r">
+                        <div class="al-av av-r"><?= $init ?></div>
+                        <div class="al-info">
+                            <div class="al-name"><?= htmlspecialchars($doc['nama']) ?></div>
+                            <div class="al-meta">
+                                <i class="fas fa-id-card"></i>
+                                <?= htmlspecialchars($doc['jenis_dok']) ?> — Expired <?= Helper::formatDate($doc['tanggal_expired']) ?>
+                                <span class="text-danger">(<?= $hariLewat ?> hari lalu)</span>
                             </div>
                         </div>
-                <?php
-                    endif;
-                endwhile;
-            endif;
-
-            if ($countExp === 0): ?>
-                <div class="al-row">
+                        <div class="al-right">
+                            <div class="al-rig"><?= htmlspecialchars($doc['kode_rig']) ?></div>
+                            <span class="al-tag tag-exp">EXPIRED</span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="al-row ep-r">
                     <div class="al-info">
-                        <div class="al-name">Tidak ada dokumen expired 🎉</div>
+                        <div class="al-name">🎉 Tidak ada dokumen expired</div>
                     </div>
                 </div>
             <?php endif; ?>
@@ -215,61 +173,38 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
     </div>
 
     <!-- AKAN EXPIRED -->
-    <div class="al al-soon">
+    <div class="al al-soon" id="sec-warning">
         <div class="al-head">
-            <div class="al-title o"><i class="fas fa-clock"></i> Akan Expired 30 Hari</div>
-            <span class="al-count o"><?= $totalWarning ?> dokumen</span>
+        <div class="al-title soon"><i class="fas fa-clock"></i> Akan Expired 30 Hari</div>
+            <span class="al-count soon"><?= $totalWarning ?> dokumen</span>
         </div>
         <div class="al-items">
-            <?php
-            $countWarn = 0;
-            if ($crewExpired && $crewExpired->num_rows > 0):
-                $crewExpired->data_seek(0);
-                while ($crew = $crewExpired->fetch_assoc()):
-                    $checks = [
-                        'Badge'      => $crew['badge_exp']      ?? null,
-                        'MCU'        => $crew['mcu_exp']        ?? null,
-                        'Sertifikat' => $crew['sertifikat_exp'] ?? null,
-                        'PKWT'       => $crew['pkwt_exp']       ?? null,
-                    ];
-
-                    $kategoriWarn = null;
-                    $tglWarn      = null;
-                    $sisaWarn     = null;
-
-                    foreach ($checks as $label => $tgl):
-                        if (empty($tgl)) continue;
-                        $sisa = Helper::sisaHari($tgl);
-                        // Ambil yang paling dekat expired di range warning (1-30 hari)
-                        if ($sisa > 0 && $sisa <= 30 && ($sisaWarn === null || $sisa < $sisaWarn)):
-                            $kategoriWarn = $label;
-                            $tglWarn      = $tgl;
-                            $sisaWarn     = $sisa;
-                        endif;
-                    endforeach;
-
-                    if ($kategoriWarn !== null && $countWarn < 3):
-                        $countWarn++;
-                        $init = strtoupper(substr($crew['nama'], 0, 2));
-            ?>
-                        <div class="al-row">
-                            <div class="al-av av-o"><?= $init ?></div>
-                            <div class="al-info">
-                                <div class="al-name"><?= $crew['nama'] ?></div>
-                                <div class="al-meta">
-                                    <i class="fas fa-id-card"></i>
-                                    <?= $kategoriWarn ?> — Exp <?= Helper::formatDate($tglWarn) ?>
-                                </div>
-                            </div>
-                            <div class="al-right">
-                                <div class="al-rig"><?= $crew['kode_rig'] ?></div>
-                                <span class="al-tag tag-soon"><?= $sisaWarn ?> hari</span>
+            <?php if (!empty($listWarningDocs)): ?>
+                <?php foreach ($listWarningDocs as $doc):
+                    $init = strtoupper(substr($doc['nama'], 0, 2));
+                ?>
+                    <div class="al-row m-r">
+                        <div class="al-av av-o"><?= $init ?></div>
+                        <div class="al-info">
+                            <div class="al-name"><?= htmlspecialchars($doc['nama']) ?></div>
+                            <div class="al-meta">
+                                <i class="fas fa-id-card"></i>
+                                <?= htmlspecialchars($doc['jenis_dok']) ?> — Exp <?= Helper::formatDate($doc['tanggal_expired']) ?>
                             </div>
                         </div>
-            <?php
-                    endif;
-                endwhile;
-            endif; ?>
+                        <div class="al-right">
+                            <div class="al-rig"><?= htmlspecialchars($doc['kode_rig']) ?></div>
+                            <span class="al-tag tag-soon"><?= $doc['sisa_hari'] ?> hari</span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="al-row m-r">
+                    <div class="al-info">
+                        <div class="al-name">Tidak ada dokumen yang akan expired</div>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -285,6 +220,7 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
                 <span class="cpill" data-filter="badge">Badge</span>
                 <span class="cpill" data-filter="mcu">MCU</span>
                 <span class="cpill" data-filter="sertifikat">Sertifikat</span>
+                <span class="cpill" data-filter="pkwt">PKWT</span>
             </div>
         </div>
         <div class="legend-row"><span class="leg"><span class="leg-dot leg-dot-red"></span>Expired</span><span class="leg"><span class="leg-dot leg-dot-orange"></span>Akan Expired</span><span class="leg"><span class="leg-dot leg-dot-green"></span>Valid</span></div>
@@ -303,26 +239,11 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
     </div>
 </div>
 
-<!-- MINI CHARTS -->
-<div class="mini-grid">
-    <div class="mini-card">
-        <div class="mini-title"><i class="fas fa-stethoscope"></i> MCU Expired per Rig</div>
-        <div class="chart-canvas-sm"><canvas id="mini1"></canvas></div>
-    </div>
-    <div class="mini-card">
-        <div class="mini-title"><i class="fas fa-certificate"></i> Sertifikat Expired per Rig</div>
-        <div class="chart-canvas-sm"><canvas id="mini2"></canvas></div>
-    </div>
-</div>
 
 <!-- TABLE -->
 <div class="table-card" id="crew-table">
     <div class="table-head">
         <div class="chart-title"><i class="fas fa-table chart-icon-red"></i> Ringkasan Crew (<?= $totalCrewAll ?> crew)</div>
-        <div class="tbl-actions">
-            <button class="tbl-btn pdf" onclick="window.print()"><i class="fas fa-file-pdf"></i> PDF</button>
-            <button class="tbl-btn xl"><i class="fas fa-file-excel"></i> Excel</button>
-        </div>
     </div>
     <div class="tw">
         <table>
@@ -388,9 +309,7 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
     <?php if ($totalPages > 1): ?>
         <a href="javascript:void(0)" onclick="loadPage(<?= $page - 1 ?>)" class="btn btn-sm btn-prev <?= $page <= 1 ? 'disabled' : '' ?>">&laquo;</a>
         <span id="pagination-numbers" class="pagination-numbers">
-            <?php for ($p = 1; $p <= min($totalPages, 10); $p++): ?>
-                <a href="javascript:void(0)" onclick="loadPage(<?= $p ?>)" class="btn btn-sm btn-page <?= $p == $page ? 'active' : '' ?>"><?= $p ?></a>
-            <?php endfor; ?>
+            <?= Helper::renderPaginationNumbers($page ?? 1, $totalPages ?? 1, 'loadPage') ?>
         </span>
         <a href="javascript:void(0)" onclick="loadPage(<?= $page + 1 ?>)" class="btn btn-sm btn-next <?= $page >= $totalPages ? 'disabled' : '' ?>">&raquo;</a>
     <?php endif; ?>
@@ -408,7 +327,7 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
             expired: <?= json_encode(array_column($rigStats, 'expired')) ?>,
             warning: <?= json_encode(array_column($rigStats, 'warning')) ?>,
             valid: <?= json_encode(array_map(function ($r) {
-                        return $r['total_crew'] - $r['expired'] - $r['warning'];
+                        return ($r['badge_valid'] ?? 0) + ($r['mcu_valid'] ?? 0) + ($r['sert_valid'] ?? 0) + ($r['pkwt_valid'] ?? 0);
                     }, $rigStats)) ?>
         },
         badge: {
@@ -425,6 +344,11 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
             expired: <?= json_encode(array_column($rigStats, 'sert_expired')) ?>,
             warning: <?= json_encode(array_column($rigStats, 'sert_warning')) ?>,
             valid: <?= json_encode(array_column($rigStats, 'sert_valid')) ?>
+        },
+        pkwt: {
+            expired: <?= json_encode(array_column($rigStats, 'pkwt_expired')) ?>,
+            warning: <?= json_encode(array_column($rigStats, 'pkwt_warning')) ?>,
+            valid: <?= json_encode(array_column($rigStats, 'pkwt_valid')) ?>
         }
     };
 
@@ -472,39 +396,37 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
         options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } }
     });
 
-    const miniOpt = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#7a7a9a' } },
-            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { stepSize: 1, font: { size: 9 }, color: '#7a7a9a' } }
-        }
-    };
-
-    const mcuExpiredData = <?= json_encode(array_column($rigStats, 'mcu_expired')) ?>;
-    const sertExpiredData = <?= json_encode(array_column($rigStats, 'sert_expired')) ?>;
-
-    new Chart(document.getElementById('mini1'), {
-        type: 'bar',
-        data: { labels: rigLabels.length ? rigLabels : ['336', '337', '338', '339'], datasets: [{ data: mcuExpiredData, backgroundColor: NAV + 'bb', borderRadius: 4 }] },
-        options: miniOpt
-    });
-    new Chart(document.getElementById('mini2'), {
-        type: 'bar',
-        data: { labels: rigLabels.length ? rigLabels : ['336', '337', '338', '339'], datasets: [{ data: sertExpiredData, backgroundColor: ORG + 'bb', borderRadius: 4 }] },
-        options: miniOpt
-    });
-
-    function drawRing(id, pct, color) {
-        const c = document.getElementById(id);
-        if (!c) return;
-        const ctx = c.getContext('2d'), r = 30, cx = 36, cy = 36, lw = 7;
-        ctx.clearRect(0, 0, 72, 72);
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.strokeStyle = '#f0f2f8'; ctx.lineWidth = lw; ctx.stroke();
-        ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, (-Math.PI / 2) + (Math.PI * 2 * pct / 100)); ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
-    }
-
+function drawRing(id, pct, color) {
+    const c = document.getElementById(id);
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    pct = Math.max(0, Math.min(100, Number(pct) || 0));
+    const r = 30;
+    const cx = 36;
+    const cy = 36;
+    const lw = 7;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, 72, 72);
+    
+    // Background circle (full ring)
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#f0f2f8';
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    
+    // Progress circle
+    const startAngle = -Math.PI / 2;
+    const endAngle = startAngle + (Math.PI * 2 * (pct / 100));
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    
+}
     drawRing('r1', <?= $badgeTotal ?>, RED);
     drawRing('r2', <?= $mcuTotal ?>, GRN);
     drawRing('r3', <?= $sertTotal ?>, ORG);
@@ -543,6 +465,16 @@ $today = $days[date('w')] . ', ' . date('d') . ' ' . $months[date('n') - 1] . ' 
     document.querySelectorAll('.sc-bar-fill[data-width]').forEach(el => {
         el.style.width = el.getAttribute('data-width') + '%';
     });
+
+    function scrollToAlert(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.transition = 'all 0.5s ease';
+            el.style.transform = 'scale(1.02)';
+            setTimeout(() => { el.style.transform = 'scale(1)'; }, 600);
+        }
+    }
 </script>
 
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>

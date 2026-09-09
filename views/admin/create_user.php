@@ -23,26 +23,25 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Role</label>
-                    <!-- REVISI: tambah opsi 'payroll', dan sembunyiin rig-section
-                         untuk super_admin MAUPUN payroll (dua-duanya gak perlu dibatasi per rig) -->
-                    <select name="role" class="form-select" onchange="document.getElementById('rig-section').style.display = (this.value == 'super_admin' || this.value == 'payroll') ? 'none' : 'block'">
+                    <select name="role" class="form-select" onchange="document.getElementById('rig-section').style.display = (this.value == 'super_admin' || this.value == 'payroll' || this.value == 'payroll_wa' || this.value == 'admin_gaji') ? 'none' : 'block'">
                         <option value="admin_rig">Admin Rig</option>
                         <option value="super_admin">Super Admin</option>
-                        <option value="payroll">Payroll</option>
+                        <option value="payroll">Payroll Admin</option>
+                        <option value="admin_gaji">Payroll</option>
                     </select>
                 </div>
 
                 <div class="col-md-12 mb-3" id="rig-section">
                     <label class="form-label fw-semibold">Rig yang Dikelola (bisa pilih lebih dari satu)</label>
                     <div class="row">
-                        <?php while ($rig = $rigs->fetch_assoc()): ?>
+                        <?php foreach ($rigs as $rig): ?>
                         <div class="col-md-3 mb-2">
                             <label class="d-flex align-items-center gap-2">
                                 <input type="checkbox" name="id_rig[]" value="<?= $rig['id_rig'] ?>">
                                 <span><?= $rig['kode_rig'] ?></span>
                             </label>
                         </div>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>

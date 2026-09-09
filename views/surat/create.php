@@ -8,6 +8,11 @@
         $crewSearchOptions[] = [
             'id' => (int) $c['id_crew'],
             'label' => trim(($c['nama'] ?? '') . ' - ' . ($c['posisi'] ?? '')),
+            'rig' => (int) ($c['id_rig'] ?? 0),
+            'nama' => $c['nama'] ?? '',
+            'posisi' => $c['posisi'] ?? '',
+            'alamat' => $c['alamat'] ?? '',
+            'crew' => $c['crew'] ?? '',
         ];
     }
 
@@ -23,7 +28,7 @@
     $scRigOptions = [];
     $rigModelForSc = $this->model('RigModel');
     $rigListForSc = $rigModelForSc->allActive();
-    while ($r = $rigListForSc->fetch_assoc()) {
+    foreach ($rigListForSc as $r) {
         if (!empty($r['kode_rig'])) {
             $scRigOptions[] = $r['kode_rig'];
         }
@@ -54,18 +59,18 @@
                     <?php if ($this->isSuperAdmin()): ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Rig</label>
-                            <select name="id_rig" class="form-select" required>
+                            <select name="id_rig" id="top_rig_select" class="form-select" required>
                                 <?php $rigModel = $this->model('RigModel');
                                 $rigs = $rigModel->allActive(); ?>
-                                <?php while ($rig = $rigs->fetch_assoc()): ?>
+                                <?php foreach ($rigs as $rig): ?>
                                     <option value="<?= $rig['id_rig'] ?>"><?= $rig['kode_rig'] ?></option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     <?php else: ?>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Rig</label>
-                            <input type="text" class="form-control" value="<?= $kode_rig ?>" disabled>
+                            <input type="text" id="top_rig_input" class="form-control" value="<?= $kode_rig ?>" disabled>
                         </div>
                     <?php endif; ?>
 
@@ -75,6 +80,8 @@
                     </div>
 
                     <input type="hidden" name="isi_surat_generated" id="isi_surat_generated" value="">
+
+                    <?php require __DIR__ . '/partials/template_surat_baru.php'; ?>
 
                     <!--  FIELD UMUM  -->
                     <div id="umum-fields">
@@ -101,6 +108,53 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Nama File (opsional)</label>
                             <input type="text" name="nama_file" class="form-control" placeholder="Nama dokumen...">
+                        </div>
+                    </div>
+
+                    <!-- FIELD PKWT -->
+                    <div id="pkwt-fields" style="display:none;" class="col-12">
+                        <div class="pkwt-workspace">
+                            <div class="pkwt-panel">
+                                <h5><i class="fas fa-file-contract"></i> Data PKWT</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Crew</label>
+                                        <div class="crew-search-wrap">
+                                            <input type="search" id="pkwt_crew_search" class="form-control" placeholder="Ketik nama atau posisi crew..." autocomplete="off">
+                                            <div id="pkwt_crew_options" class="crew-options" style="display:none;"></div>
+                                        </div>
+                                        <input type="hidden" name="pkwt_id_crew" id="pkwt_id_crew" value="">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Posisi / Template</label>
+                                        <select name="pkwt_template" id="pkwt_template" class="form-select">
+                                            <option value="">Pilih posisi</option>
+                                            <?php foreach (['Accs Control','Asst Derrickman','Asst Driller','Derrickman','Electric','Floorman','Mechanic','Motorman','Mudboy','Room boy','Roustabout','Teknisi Crane','Welder'] as $tpl): ?>
+                                                <option value="<?= htmlspecialchars($tpl, ENT_QUOTES) ?>"><?= htmlspecialchars($tpl) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6"><label class="form-label">Tanggal Mulai</label><input type="date" name="pkwt_tanggal_mulai" id="pkwt_tanggal_mulai" class="form-control" value="<?= date('Y-m-d') ?>"></div>
+                                    <div class="col-md-6"><label class="form-label">Tanggal Berakhir</label><input type="date" name="pkwt_tanggal_berakhir" id="pkwt_tanggal_berakhir" class="form-control"></div>
+                                </div>
+                                <div id="pkwt_crew_info" class="pkwt-crew-info mt-3">Pilih rig, crew, dan posisi untuk mengisi data otomatis.</div>
+                                <div class="pkwt-crew-details mt-2" id="pkwt_crew_details" style="display:none;">
+                                    <small><strong>Crew:</strong> <span id="pkwt_crew_class">-</span></small>
+                                </div>
+                            </div>
+                            <aside class="pkwt-preview-wrap">
+                                <h5><i class="fas fa-eye"></i> Preview PKWT</h5>
+                                <div class="pkwt-preview">
+                                    <div class="st-preview-head"><div class="st-preview-title">PERJANJIAN KERJA WAKTU TERTENTU</div><div>Nomor: otomatis dari sistem</div></div>
+                                    <div class="st-preview-meta">
+                                        <div><strong>Nama:</strong> <span id="pkwtp_nama">...</span></div>
+                                        <div><strong>Jabatan:</strong> <span id="pkwtp_posisi">...</span></div>
+                                        <div><strong>Rig:</strong> <span id="pkwtp_rig">...</span></div>
+                                        <div><strong>Periode:</strong> <span id="pkwtp_periode">...</span></div>
+                                    </div>
+                                    <div class="st-preview-body"><p id="pkwtp_body">Pilih crew untuk melihat ringkasan PKWT.</p></div>
+                                </div>
+                            </aside>
                         </div>
                     </div>
 
@@ -997,6 +1051,166 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                         </div>
                     </div>
 
+                <!--  FIELD MCU  -->
+                <div id="mcu-fields" style="display:none;">
+                    <div class="mcu-workspace">
+                        <div class="mcu-left">
+                            <section class="mcu-panel">
+                                <h5>1. Data Karyawan</h5>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Filter Crew</label>
+                                        <select id="mcu_filter_crew" class="form-select spk-input" onchange="filterMcuCrewByGroup()">
+                                            <option value="">Semua Crew</option>
+                                            <option value="A">Crew A</option>
+                                            <option value="B">Crew B</option>
+                                            <option value="C">Crew C</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-semibold">Cari crew</label>
+                                        <div class="crew-search-wrap">
+                                            <input type="text" id="mcu_crew_search" class="form-control spk-input"
+                                                placeholder="Ketik nama crew..." autocomplete="off"
+                                                onfocus="showCrewDropdown('mcu_crew_search', 'mcu_crew_options')"
+                                                oninput="filterCrewOptions('mcu_crew_search', 'mcu_crew_options')">
+                                            <div id="mcu_crew_options" class="crew-options" style="display:none;"></div>
+                                        </div>
+                                        <input type="hidden" id="mcu_id_crew" value="">
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Nama / Name</label>
+                                        <input type="text" id="mcu_nama" class="form-control spk-input" placeholder="Nama karyawan" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Umur / Age</label>
+                                        <input type="text" id="mcu_umur" class="form-control spk-input" placeholder="_____ Thn" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Jenis Kelamin / Sex</label>
+                                        <select id="mcu_jenis_kelamin" class="form-select spk-input" onchange="buildMcuIsi()">
+                                            <option value="Laki-Laki">Laki-Laki</option>
+                                            <option value="Perempuan">Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Pekerjaan / Job Title</label>
+                                        <input type="text" id="mcu_pekerjaan" class="form-control spk-input" placeholder="Jabatan" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Perusahaan / Company</label>
+                                        <input type="text" id="mcu_perusahaan" class="form-control spk-input" value="PT SIGMA / Greatwall Drilling Asia Pasific" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Alamat / Address</label>
+                                        <input type="text" id="mcu_alamat" class="form-control spk-input" placeholder="Alamat" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">Blood type</label>
+                                        <input type="text" id="mcu_blood_type" class="form-control spk-input" value="-" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-semibold">NIK ID Card</label>
+                                        <input type="text" id="mcu_nik" class="form-control spk-input" placeholder="NIK" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">MCU Requirement</label>
+                                        <select id="mcu_requirement" class="form-select spk-input" onchange="buildMcuIsi()">
+                                            <option value="MCU PHR (Pre-Employee)">MCU PHR (Pre-Employee)</option>
+                                            <option value="MCU PHR (Annual-Employee)">MCU PHR (Annual-Employee)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="mcu-panel">
+                                <h5>2. Detail MCU</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Tanggal Surat</label>
+                                        <input type="date" id="mcu_tgl_surat" class="form-control spk-input" value="<?= date('Y-m-d') ?>" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Date MCU</label>
+                                        <input type="date" id="mcu_date_mcu" class="form-control spk-input" value="<?= date('Y-m-d') ?>" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Location MCU</label>
+                                        <input type="text" id="mcu_location_mcu" class="form-control spk-input" value="RS Mutia Sari Duri" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Location Job</label>
+                                        <input type="text" id="mcu_location_job" class="form-control spk-input" value="Field Worker / Pekerja Rig" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Rig Location</label>
+                                        <input type="text" id="mcu_rig_location" class="form-control spk-input" readonly placeholder="Auto dari crew" oninput="buildMcuIsi()">
+                                        <small class="text-muted d-block">Terisi otomatis dari data crew.</small>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="mcu-panel">
+                                <h5>3. Keluhan & Pemeriksaan</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Keluhan / Complaint</label>
+                                        <textarea id="mcu_keluhan" class="form-control spk-input" rows="2" oninput="buildMcuIsi()">-</textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Pemeriksaan Fisik atau Penunjang / Physical or Supporting Examination</label>
+                                        <textarea id="mcu_pemeriksaan" class="form-control spk-input" rows="2" oninput="buildMcuIsi()">-</textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Diagnosa Sementara / Working Diagnosis</label>
+                                        <textarea id="mcu_diagnosa" class="form-control spk-input" rows="2" oninput="buildMcuIsi()">-</textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Pengobatan & Tindakan Sementara / Medicine & Supportive Treatment</label>
+                                        <textarea id="mcu_pengobatan" class="form-control spk-input" rows="2" oninput="buildMcuIsi()">-</textarea>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="mcu-panel">
+                                <h5>4. Penandatangan</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Nama Penandatangan</label>
+                                        <input type="text" id="mcu_signer" class="form-control spk-input" value="Rifqi Haidi" oninput="buildMcuIsi()">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Jabatan Penandatangan</label>
+                                        <input type="text" id="mcu_signer_title" class="form-control spk-input" value="HSE Coordinator PT GDAP" oninput="buildMcuIsi()">
+                                    </div>
+                                </div>
+                                <input type="hidden" name="perihal" id="mcu_perihal" value="Surat Pengajuan MCU Crew">
+                            </section>
+                        </div>
+
+                        <aside class="mcu-preview-wrap">
+                            <h5><i class="fas fa-eye"></i> Preview live</h5>
+                            <div class="mcu-preview">
+                                <div class="st-preview-head">
+                                    <div class="st-preview-title">SURAT PENGANTAR MCU</div>
+                                    <div>No: <span id="mcup_nomor">auto</span></div>
+                                </div>
+                                <div class="st-preview-meta">
+                                    <div><strong>Nama:</strong> <span id="mcup_nama">...</span></div>
+                                    <div><strong>Pekerjaan:</strong> <span id="mcup_pekerjaan">...</span></div>
+                                    <div><strong>Rig:</strong> <span id="mcup_rig">...</span></div>
+                                    <div><strong>MCU Type:</strong> <span id="mcup_type">Pre-Employee</span></div>
+                                </div>
+                                <div class="st-preview-body">
+                                    <p id="mcup_body">Preview akan muncul di sini saat Anda mengisi data.</p>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+
                 <!--  FIELD SC  -->
                 <div id="sc-fields" style="display:none;">
                     <div class="sc-workspace">
@@ -1105,7 +1319,14 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
     </div>
 
     <style>
-        .spk-workspace {
+        .pkwt-workspace { display:grid; grid-template-columns:minmax(0, 1fr) minmax(280px, .72fr); gap:20px; }
+        .pkwt-panel, .pkwt-preview-wrap { border:1px solid var(--border); border-radius:12px; background:#fff; padding:20px; }
+        .pkwt-preview-wrap { align-self:start; position:sticky; top:16px; background:#f8f8fb; }
+        .pkwt-preview { border:1px solid var(--border); border-radius:10px; background:#fff; padding:22px; font-size:13px; }
+        .pkwt-preview p { margin:0; text-align:justify; }
+        @media (max-width: 992px) { .pkwt-workspace { grid-template-columns:1fr; } .pkwt-preview-wrap { position:static; } }
+        .spk-workspace,
+        .mcu-workspace {
             display: grid;
             grid-template-columns: minmax(0, 1.05fr) minmax(310px, .95fr);
             gap: 20px;
@@ -1117,7 +1338,8 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
         .sc-left,
         .ska-left,
         .sp-left,
-        .spt-left {
+        .spt-left,
+        .mcu-left {
             display: grid;
             gap: 16px;
         }
@@ -1127,7 +1349,8 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
         .sc-workspace,
         .ska-workspace,
         .sp-workspace,
-        .spt-workspace {
+        .spt-workspace,
+        .mcu-workspace {
             display: grid;
             grid-template-columns: minmax(0, 1.05fr) minmax(310px, .95fr);
             gap: 20px;
@@ -1145,7 +1368,9 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
         .sp-panel,
         .sp-preview-wrap,
         .spt-panel,
-        .spt-preview-wrap {
+        .spt-preview-wrap,
+        .mcu-panel,
+        .mcu-preview-wrap {
             border: 1px solid var(--border);
             border-radius: 12px;
             background: #fff;
@@ -1519,7 +1744,7 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
 
         document.addEventListener('click', (event) => {
             if (!event.target.closest('.crew-search-wrap')) {
-                ['crew-options', 'st_crew_options', 'ska_crew_options', 'sp_crew_options', 'sr_crew_options', 'skk_crew_options', 'ba_crew_options', 'sj_crew_options'].forEach(optionsId => {
+                    ['crew-options', 'pkwt_crew_options', 'st_crew_options', 'ska_crew_options', 'sp_crew_options', 'sr_crew_options', 'skk_crew_options', 'ba_crew_options', 'sj_crew_options', 'mcu_crew_options'].forEach(optionsId => {
                     const options = document.getElementById(optionsId);
                     if (options) options.style.display = 'none';
                 });
@@ -1533,6 +1758,8 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
             const submitSurat = document.getElementById('submit-surat');
             const formActions = document.getElementById('surat-form-actions');
             const isSpk = code === 'SPK';
+            const isSpm = code === 'SPM';
+            const isPhk = code === 'PHK';
             const isSt = code === 'ST';
             const isSc = code === 'SC';
             const isSka = code === 'SKA';
@@ -1543,29 +1770,32 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
             const isBa = code === 'BA';
             const isSj = code === 'SJ';
             const isMm = code === 'MM';
-            const specialCodes = ['SPK', 'ST', 'SC', 'SKA', 'SP', 'SPT', 'SR', 'SKK', 'BA', 'SJ', 'MM'];
-            const fieldIds = ['spk-fields', 'st-fields', 'sc-fields', 'ska-fields', 'sp-fields', 'spt-fields', 'sr-fields', 'skk-fields', 'ba-fields', 'sj-fields', 'mm-fields'];
+            const isMcu = code === 'MCU';
+            const isPkwt = code === 'PKWT';
+            const specialCodes = ['SPK', 'SPM', 'PHK', 'ST', 'SC', 'SKA', 'SP', 'SPT', 'SR', 'SKK', 'BA', 'SJ', 'MM', 'MCU', 'PKWT'];
+            const fieldIds = ['pkwt-fields', 'spm-fields', 'phk-fields', 'spk-task-fields', 'spk-fields', 'st-fields', 'sc-fields', 'ska-fields', 'sp-fields', 'spt-fields', 'sr-fields', 'skk-fields', 'ba-fields', 'sj-fields', 'mm-fields', 'mcu-fields'];
 
             document.querySelectorAll('#umum-fields input, #umum-fields textarea, #umum-fields select').forEach(el => {
                 el.disabled = specialCodes.includes(code);
             });
 
             fieldIds.forEach(id => {
-                const isActive = id === code.toLowerCase() + '-fields';
+                const isActive = (id === code.toLowerCase() + '-fields') || (code === 'SPK' && id === 'spk-task-fields');
+                const isLegacySpk = code === 'SPK' && id === 'spk-fields';
                 const fields = document.getElementById(id);
                 if (!fields) return;
-                fields.style.display = isActive ? 'block' : 'none';
+                fields.style.display = (isActive && !isLegacySpk) ? 'block' : 'none';
                 fields.querySelectorAll('input, textarea, select').forEach(el => {
-                    el.disabled = !isActive;
+                    el.disabled = !isActive || isLegacySpk;
                 });
             });
 
             document.getElementById('umum-fields').style.display = specialCodes.includes(code) ? 'none' : 'block';
             formActions.classList.toggle('is-spk', isSpk);
 
-            if (isSpk) {
-                submitSurat.innerHTML = '<i class="fas fa-print"></i> Generate & Cetak';
-                updateSpkPreview();
+            if (isSpk || isSpm || isPhk) {
+                submitSurat.innerHTML = '<i class="fas fa-file-signature"></i> Simpan & Generate Nomor';
+                buildTemplateSuratIsi();
             } else if (isSt) {
                 submitSurat.innerHTML = '<i class="fas fa-file-signature"></i> Simpan & Generate Nomor';
                 if (selectedCrewData) {
@@ -1612,9 +1842,107 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 submitSurat.innerHTML = '<i class="fas fa-envelope-open-text"></i> Simpan & Generate Nomor';
                 toggleMemoModel();
                 buildMmIsi();
+            } else if (isPkwt) {
+                submitSurat.innerHTML = '<i class="fas fa-file-contract"></i> Simpan PKWT';
+                updatePkwtCrew();
             } else {
                 submitSurat.innerHTML = '<i class="fas fa-save"></i> Simpan & Generate Nomor';
             }
+        }
+
+        function updatePkwtCrew() {
+            const crewId = document.getElementById('pkwt_id_crew')?.value || '';
+            const crew = crewSearchOptions.find(item => String(item.id) === crewId);
+            const position = crew?.posisi || '';
+            const template = document.getElementById('pkwt_template');
+            if (template && position) {
+                const match = [...template.options].find(o => o.value.toLowerCase() === position.toLowerCase());
+                if (match) template.value = match.value;
+            }
+            const info = document.getElementById('pkwt_crew_info');
+            if (info) info.textContent = crew ? `${crew.label} — Alamat: ${crew.alamat || '-'}` : 'Pilih rig, crew, dan posisi untuk mengisi data otomatis.';
+            
+            // Display crew classification (A, B, or C)
+            const crewClass = document.getElementById('pkwt_crew_class');
+            const crewDetails = document.getElementById('pkwt_crew_details');
+            if (crewClass && crewDetails) {
+                if (crew && crew.crew) {
+                    crewClass.textContent = 'Crew ' + crew.crew;
+                    crewDetails.style.display = 'block';
+                } else {
+                    crewClass.textContent = '-';
+                    crewDetails.style.display = 'none';
+                }
+            }
+            
+            document.getElementById('pkwtp_nama').textContent = crew?.nama || '...';
+            document.getElementById('pkwtp_posisi').textContent = crew?.posisi || '...';
+            document.getElementById('pkwtp_rig').textContent = document.getElementById('top_rig_select')?.selectedOptions[0]?.text || '...';
+            updatePkwtPreview();
+        }
+        document.getElementById('top_rig_select')?.addEventListener('change', filterPkwtCrewByRig);
+        function filterPkwtCrewByRig() {
+            const rig = document.getElementById('top_rig_select')?.value;
+            const keyword = (document.getElementById('pkwt_crew_search')?.value || '').toLowerCase().trim();
+            const options = document.getElementById('pkwt_crew_options');
+            if (!rig || !options) return;
+            const results = crewSearchOptions.filter(item => String(item.rig) === String(rig) && (!keyword || item.label.toLowerCase().includes(keyword)));
+            options.innerHTML = '';
+            results.forEach(item => {
+                const button = document.createElement('button');
+                button.type = 'button'; button.className = 'crew-option'; button.textContent = item.label;
+                button.addEventListener('click', () => {
+                    document.getElementById('pkwt_id_crew').value = item.id;
+                    document.getElementById('pkwt_crew_search').value = item.label;
+                    options.style.display = 'none';
+                    updatePkwtCrew();
+                });
+                options.appendChild(button);
+            });
+            options.style.display = results.length ? 'block' : 'none';
+        }
+        filterPkwtCrewByRig();
+        document.getElementById('pkwt_crew_search')?.addEventListener('focus', filterPkwtCrewByRig);
+        document.getElementById('pkwt_crew_search')?.addEventListener('input', () => {
+            document.getElementById('pkwt_id_crew').value = '';
+            filterPkwtCrewByRig();
+        });
+        ['pkwt_tanggal_mulai', 'pkwt_tanggal_berakhir'].forEach(id => document.getElementById(id)?.addEventListener('input', updatePkwtPreview));
+        function updatePkwtPreview() {
+            const mulai = document.getElementById('pkwt_tanggal_mulai')?.value || '...';
+            const berakhir = document.getElementById('pkwt_tanggal_berakhir')?.value || '...';
+            document.getElementById('pkwtp_periode').textContent = `${mulai} s/d ${berakhir}`;
+            const nama = document.getElementById('pkwtp_nama')?.textContent || 'crew';
+            document.getElementById('pkwtp_body').textContent = `PKWT akan dibuat untuk ${nama} sesuai posisi dan periode kerja yang dipilih.`;
+        }
+
+        function buildTemplateSuratIsi() {
+            const code = document.getElementById('id_jenis')?.options[document.getElementById('id_jenis').selectedIndex]?.dataset.code || '';
+            const val = id => (document.getElementById(id)?.value || '').trim();
+            let content = '', subject = '', recipient = '';
+            if (code === 'SPM') {
+                subject = 'Surat Penunjukan Mentor'; recipient = val('spm_mentor');
+                content = ['Mentor: ' + val('spm_mentor'), 'Jabatan Mentor: ' + val('spm_mentor_position'), 'Mentee: ' + val('spm_mentee'), 'Jabatan Mentee: ' + val('spm_mentee_position'), 'Periode: ' + val('spm_period'), 'Ruang Lingkup: ' + val('spm_scope'), 'Penandatangan: ' + val('spm_signer')].join('\n');
+            } else if (code === 'PHK') {
+                subject = 'Surat Pemutusan Hubungan Kerja'; recipient = val('phk_name');
+                content = ['Nama Karyawan: ' + val('phk_name'), 'Jabatan: ' + val('phk_position'), 'Nomor Badge: ' + val('phk_badge'), 'Tanggal Efektif: ' + val('phk_effective'), 'Alasan: ' + val('phk_reason'), 'Penandatangan: ' + val('phk_signer'), 'Jabatan Penandatangan: ' + val('phk_signer_title')].join('\n');
+            } else if (code === 'SPK') {
+                subject = 'Surat Tugas'; recipient = val('spk_task_name');
+                content = ['Nama Personel: ' + val('spk_task_name'), 'Jabatan: ' + val('spk_task_position'), 'Lokasi: ' + val('spk_task_location'), 'Periode: ' + val('spk_task_period'), 'Uraian Tugas: ' + val('spk_task_description'), 'Penandatangan: ' + val('spk_task_signer'), 'Jabatan Penandatangan: ' + val('spk_task_signer_title')].join('\n');
+            } else return;
+            document.getElementById('isi_surat_generated').value = content;
+            const isi = document.getElementById('isi_surat'); if (isi) isi.value = content;
+            const prefix = code === 'SPK' ? 'spk_task' : code.toLowerCase();
+            const tujuan = document.getElementById(prefix + '_tujuan'); if (tujuan) tujuan.value = recipient;
+            const perihal = document.getElementById(prefix + '_perihal'); if (perihal) perihal.value = subject;
+            updateTemplateSuratPreview(code, val);
+        }
+
+        function updateTemplateSuratPreview(code, val) {
+            const put = (id, value, fallback = '...') => { const el = document.getElementById(id); if (el) el.textContent = value || fallback; };
+            if (code === 'SPM') { put('spmp_mentor', val('spm_mentor')); put('spmp_mentee', val('spm_mentee')); put('spmp_period', val('spm_period')); put('spmp_scope', val('spm_scope'), 'Isi ruang lingkup pendampingan akan tampil di sini.'); }
+            if (code === 'PHK') { put('phkp_name', val('phk_name')); put('phkp_position', val('phk_position')); put('phkp_effective', val('phk_effective')); put('phkp_reason', val('phk_reason'), 'Alasan atau dasar PHK akan tampil di sini.'); }
+            if (code === 'SPK') { put('spkp_name', val('spk_task_name')); put('spkp_position', val('spk_task_position')); put('spkp_location', val('spk_task_location')); put('spkp_period', val('spk_task_period')); put('spkp_description', val('spk_task_description'), 'Uraian tugas akan tampil di sini.'); }
         }
 
         function buildAllCrewDropdowns() {
@@ -1626,6 +1954,11 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
             buildCrewDropdown('skk_crew_options');
             buildCrewDropdown('ba_crew_options');
             buildCrewDropdown('sj_crew_options');
+            buildCrewDropdown('spm_mentor_options');
+            buildCrewDropdown('spm_mentee_options');
+            buildCrewDropdown('phk_crew_options');
+            buildCrewDropdown('spk_task_crew_options');
+            buildCrewDropdown('mcu_crew_options');
         }
 
         function buildCrewDropdown(optionsId = 'crew-options') {
@@ -1646,7 +1979,12 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                     sr_crew_options: ['sr_crew_search', 'sr_id_crew'],
                     skk_crew_options: ['skk_crew_search', 'skk_id_crew'],
                     ba_crew_options: ['ba_crew_search', 'ba_id_crew'],
-                    sj_crew_options: ['sj_crew_search', 'sj_id_crew']
+                    sj_crew_options: ['sj_crew_search', 'sj_id_crew'],
+                    spm_mentor_options: ['spm_mentor_search', 'spm_mentor_crew_id'],
+                    spm_mentee_options: ['spm_mentee_search', 'spm_mentee_crew_id'],
+                    phk_crew_options: ['phk_crew_search', 'phk_crew_id'],
+                    spk_task_crew_options: ['spk_task_crew_search', 'spk_task_crew_id'],
+                    mcu_crew_options: ['mcu_crew_search', 'mcu_id_crew']
                 };
                 const target = targetMap[optionsId] || ['crew-search', 'id_crew'];
                 button.addEventListener('click', () => selectCrewOption(item.id, item.label, target[0], optionsId, target[1]));
@@ -1716,10 +2054,10 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 sjHidden.value = id;
             }
 
-            getCrewData(id);
+            getCrewData(id, optionsId);
         }
 
-        function getCrewData(id_crew) {
+        function getCrewData(id_crew, sourceOptionsId = '') {
             if (!id_crew) {
                 selectedCrewData = null;
                 document.getElementById('crew-search').value = '';
@@ -1745,14 +2083,37 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                     document.getElementById('crew_group').value = data.crew ? 'Crew ' + data.crew : '';
                     document.getElementById('badge_crew').value = data.nomor_badge;
                     setCrewChips(data);
-                    applySelectedCrewToForms(data);
+                    applySelectedCrewToForms(data, sourceOptionsId);
                 });
         }
 
-        function applySelectedCrewToForms(data) {
+        function applySelectedCrewToForms(data, sourceOptionsId = '') {
             const selectedCode = document.getElementById('id_jenis')?.options[document.getElementById('id_jenis').selectedIndex]?.dataset.code || '';
             if (selectedCode === 'SPK') {
-                buildSpkIsi();
+                const name = document.getElementById('spk_task_name');
+                const position = document.getElementById('spk_task_position');
+                const location = document.getElementById('spk_task_location');
+                if (name) name.value = data.nama || '';
+                if (position) position.value = data.posisi || '';
+                if (location) location.value = data.kode_rig || '';
+                buildTemplateSuratIsi();
+            } else if (selectedCode === 'PHK') {
+                const name = document.getElementById('phk_name');
+                const position = document.getElementById('phk_position');
+                const badge = document.getElementById('phk_badge');
+                if (name) name.value = data.nama || '';
+                if (position) position.value = data.posisi || '';
+                if (badge) badge.value = data.nomor_badge || '';
+                buildTemplateSuratIsi();
+            } else if (selectedCode === 'SPM') {
+                if (sourceOptionsId === 'spm_mentee_options') {
+                    document.getElementById('spm_mentee').value = data.nama || '';
+                    document.getElementById('spm_mentee_position').value = data.posisi || '';
+                } else {
+                    document.getElementById('spm_mentor').value = data.nama || '';
+                    document.getElementById('spm_mentor_position').value = data.posisi || '';
+                }
+                buildTemplateSuratIsi();
             } else if (selectedCode === 'ST') {
                 const stName = document.getElementById('st_name');
                 const stDepartment = document.getElementById('st_department');
@@ -1820,6 +2181,38 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 if (sjAddress) sjAddress.value = data.alamat || '';
                 if (sjDomicile) sjDomicile.value = data.alamat || '';
                 buildSjIsi();
+            } else if (selectedCode === 'MCU') {
+                const mcuNama = document.getElementById('mcu_nama');
+                const mcuUmur = document.getElementById('mcu_umur');
+                const mcuPekerjaan = document.getElementById('mcu_pekerjaan');
+                const mcuAlamat = document.getElementById('mcu_alamat');
+                const mcuNik = document.getElementById('mcu_nik');
+                const mcuRigLocation = document.getElementById('mcu_rig_location');
+                const mcuSigner = document.getElementById('mcu_signer');
+                const mcuSignerTitle = document.getElementById('mcu_signer_title');
+                if (mcuNama) mcuNama.value = data.nama || '';
+                if (mcuUmur) mcuUmur.value = data.umur || '';
+                // Format EYD: Posisi huruf pertama kapital (contoh: Floorman)
+                const posisiEyd = (data.posisi || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+                // Ambil hanya angka dari kode rig (contoh: GW339 → 339)
+                const rigOnly = (data.kode_rig || '').replace(/^[A-Za-z\s\-]+/, '');
+                if (mcuPekerjaan) mcuPekerjaan.value = posisiEyd + ' ' + rigOnly;
+                if (mcuAlamat) mcuAlamat.value = data.alamat || '';
+                if (mcuNik) mcuNik.value = data.nik_ktp || '';
+                if (mcuRigLocation) mcuRigLocation.value = 'Drilling ' + (data.kode_rig || '');
+                // Auto-fill signer dengan nama crew
+                if (mcuSigner) mcuSigner.value = data.nama || '';
+                if (mcuSignerTitle) mcuSignerTitle.value = posisiEyd || '';
+                // Auto-fill rig di bagian atas form
+                const topRigSelect = document.getElementById('top_rig_select');
+                const topRigInput = document.getElementById('top_rig_input');
+                if (topRigSelect && data.id_rig) {
+                    topRigSelect.value = data.id_rig;
+                }
+                if (topRigInput) {
+                    topRigInput.value = data.kode_rig || '';
+                }
+                buildMcuIsi();
             }
         }
 
@@ -2285,7 +2678,7 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 previewPosisiLengkap + ' atas nama ' + previewNama + ' menggantikan posisi ' + previewMengganti + '.';
         }
 
-        // ===== SR - Surat Resign =====
+        //  SR - Surat Resign 
         function syncSrRigsWithTujuan() {
             syncRigsWithTujuan('sr_tujuan', 'sr_rigs');
         }
@@ -2338,7 +2731,7 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
             document.getElementById('srp_body').textContent = bodyText;
         }
 
-        // ===== SKK - Surat Keterangan Kerja =====
+        //  SKK - Surat Keterangan Kerja 
         function syncSkkRigsWithTujuan() {
             syncRigsWithTujuan('skk_tujuan', 'skk_rigs');
         }
@@ -2362,12 +2755,15 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 place: document.getElementById('skk_place').value.trim()
             };
 
+            const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+            const displayPos = values.position ? values.position : (values.positions ? values.positions : '');
+
             const content = [
                 'Kepada: ' + (values.tujuan || 'Crew terkait'),
                 'Posisi: ' + (values.positions || values.position || ''),
                 'Rigs: ' + (values.rigs || ''),
-                'Nama: ' + (values.name || ''),
-                'Jabatan: ' + (values.position || ''),
+                'Nama: ' + displayName,
+                'Jabatan: ' + displayPos,
                 'Project: ' + (values.project || 'Drilling at PT. Greatwall Drilling Asia Pacific'),
                 'Mulai Bekerja: ' + (formatDateId(values.startDate) || ''),
                 'Tanggal Surat: ' + (formatDateId(values.letterDate) || formatDateId('<?= date('Y-m-d') ?>')),
@@ -2381,18 +2777,23 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
 
         function updateSkkPreview(values = null) {
             values = values || {
+                tujuan: document.getElementById('skk_tujuan') ? document.getElementById('skk_tujuan').value.trim() : '',
+                positions: getSkkSelectedPositions(),
                 name: document.getElementById('skk_name').value.trim(),
                 position: document.getElementById('skk_position').value.trim(),
                 project: document.getElementById('skk_project').value.trim()
             };
 
-            document.getElementById('skkp_name').textContent = values.name || '...';
-            document.getElementById('skkp_position').textContent = values.position || '...';
+            const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+            const displayPos = values.position ? values.position : (values.positions ? values.positions : '-');
+
+            document.getElementById('skkp_name').textContent = displayName;
+            document.getElementById('skkp_position').textContent = displayPos;
             document.getElementById('skkp_project').textContent = values.project || '...';
-            document.getElementById('skkp_body').textContent = values.name ? 'Surat keterangan kerja untuk ' + values.name + ' sebagai ' + values.position + ' di ' + values.project + '.' : 'Pilih crew untuk mengisi otomatis.';
+            document.getElementById('skkp_body').textContent = 'Surat keterangan kerja untuk ' + displayName + (displayPos && displayPos !== '-' ? ' (' + displayPos + ')' : '') + ' di ' + (values.project || 'PT. Greatwall Drilling Asia Pacific') + '.';
         }
 
-        // ===== BA - Berita Acara =====
+        //  BA - Berita Acara 
         function syncBaRigsWithTujuan() {
             syncRigsWithTujuan('ba_tujuan', 'ba_rigs');
         }
@@ -2419,6 +2820,10 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 place: document.getElementById('ba_place').value.trim()
             };
 
+            const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+            const displayPos = values.position ? values.position : (values.positions ? values.positions : '');
+            const displayRig = values.rig ? values.rig : (values.rigs ? values.rigs : '');
+
             const contractNo = values.contract || 'SPHR00618A';
             const placeText = values.place || 'Tanggul';
             const resultText = values.result || 'Passed';
@@ -2432,9 +2837,9 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
                 'Kepada: ' + (values.tujuan || 'Crew terkait'),
                 'Posisi: ' + (values.positions || values.position || ''),
                 'Rigs: ' + (values.rigs || values.rig || ''),
-                'Nama: ' + (values.name || ''),
-                'Jabatan: ' + (values.position || ''),
-                'Rig: ' + (values.rig || ''),
+                'Nama: ' + displayName,
+                'Jabatan: ' + displayPos,
+                'Rig: ' + displayRig,
                 'No Kontrak: ' + contractNo,
                 'Start OJT: ' + (formatDateId(values.startOjt) || ''),
                 'End OJT: ' + (formatDateId(values.endOjt) || ''),
@@ -2454,17 +2859,22 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
 
         function updateBaPreview(values = null) {
             values = values || {
+                tujuan: document.getElementById('ba_tujuan') ? document.getElementById('ba_tujuan').value.trim() : '',
                 name: document.getElementById('ba_name').value.trim(),
                 rig: document.getElementById('ba_rig').value.trim(),
+                rigs: document.getElementById('ba_rigs') ? document.getElementById('ba_rigs').value.trim() : '',
                 result: document.getElementById('ba_result').value
             };
 
-            document.getElementById('bap_name').textContent = values.name || '...';
-            document.getElementById('bap_rig').textContent = values.rig || '...';
+            const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+            const displayRig = values.rig ? values.rig : (values.rigs ? values.rigs : '-');
+
+            document.getElementById('bap_name').textContent = displayName;
+            document.getElementById('bap_rig').textContent = displayRig;
             document.getElementById('bap_result').textContent = values.result || 'Passed';
         }
 
-        // ===== SJ - Surat Perjanjian =====
+        //  SJ - Surat Perjanjian 
         function buildSjIsi() {
             const values = {
                 date: document.getElementById('sj_date').value,
@@ -2504,7 +2914,7 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
             document.getElementById('sjp_fee').textContent = values.fee || 'Rp. 12.000.000';
         }
 
-        // ===== MM - Memo =====
+        //  MM - Memo 
         function toggleMemoModel() {
             const model = document.getElementById('mm_model')?.value || 'Memo Internal';
             const isMemorandum = model === 'Memorandum';
@@ -2534,6 +2944,91 @@ Apabila selama masa probation karyawan menunjukkan komitmen dan perbaikan yang b
             document.getElementById('mm_followup').value = 'Berdasarkan hasil evaluasi kinerja selama 12 (dua belas) bulan terakhir, Manajemen PT ADK6 Sigma yang menaungi dan mengelola Crew GW-339 menetapkan beberapa nama crew yang tidak direkomendasikan untuk perpanjangan kontrak kerja periode 2026, sebagai berikut:\n1. Habib Mughni Arasyd - Roustabout\n2. Rangga Saputra - Access Control\n3. Aldy Hudri - Access Control\n4. Syafwan - Floorman\n5. Andre - Roomboy\n\nAdapun hasil evaluasi menunjukkan tidak adanya peningkatan kinerja yang signifikan, khususnya dari aspek:\n- Kedisiplinan kerja, Rekap Kehadiran/Absensi\n- Efektivitas dan tanggung jawab pekerjaan\n- Loyalitas terhadap perusahaan\n- Kepatuhan terhadap peraturan perusahaan\n\nSehubungan dengan hal tersebut, Manajemen mengajukan permohonan persetujuan dan dukungan dari Team Leader di lokasi serta Manajemen GWDC untuk melakukan pergantian crew terhadap nama-nama yang tercantum di atas.\n\nSelanjutnya, PT ADK6-Sigma akan mengakhiri hubungan kerja karyawan yang bersangkutan sesuai dengan masa berlaku PKWT yang telah ditandatangani sebelumnya. Selama masa kontrak masih berjalan, karyawan wajib tetap melaksanakan tugas kerja hingga kontrak berakhir, guna mendukung kelancaran proses administrasi pemutihan CCPM serta pembayaran seluruh hak karyawan sesuai ketentuan yang berlaku.';
             document.getElementById('mm_closing').value = 'Demikian memorandum ini kami sampaikan untuk dapat dipahami dan dilaksanakan sebagaimana mestinya. Atas perhatian dan kerja sama yang baik, kami ucapkan terima kasih.';
             intro.dataset.memorandumLoaded = 'true';
+        }
+
+        //  MCU - Surat Pengajuan MCU 
+        function filterMcuCrewByGroup() {
+            const group = document.getElementById('mcu_filter_crew')?.value || '';
+            const wrap = document.getElementById('mcu_crew_options');
+            if (!wrap) return;
+            const items = wrap.querySelectorAll('.crew-option');
+            items.forEach(item => {
+                const label = item.textContent || '';
+                // Cari data crew dari array crewSearchOptions
+                const crewItem = crewSearchOptions.find(c => c.label === label || item.dataset.id == c.id);
+                const crewGroup = crewItem?.crew || '';
+                if (!group || crewGroup === group) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function buildMcuIsi() {
+            const values = {
+                nama: document.getElementById('mcu_nama').value.trim(),
+                umur: document.getElementById('mcu_umur').value.trim(),
+                jenisKelamin: document.getElementById('mcu_jenis_kelamin').value,
+                pekerjaan: document.getElementById('mcu_pekerjaan').value.trim(),
+                perusahaan: document.getElementById('mcu_perusahaan').value.trim(),
+                alamat: document.getElementById('mcu_alamat').value.trim(),
+                bloodType: document.getElementById('mcu_blood_type').value.trim(),
+                nik: document.getElementById('mcu_nik').value.trim(),
+                requirement: document.getElementById('mcu_requirement').value,
+                tglSurat: document.getElementById('mcu_tgl_surat').value,
+                dateMcu: document.getElementById('mcu_date_mcu').value,
+                locationMcu: document.getElementById('mcu_location_mcu').value.trim(),
+                locationJob: document.getElementById('mcu_location_job').value.trim(),
+                rigLocation: document.getElementById('mcu_rig_location').value.trim(),
+                keluhan: document.getElementById('mcu_keluhan').value.trim(),
+                pemeriksaan: document.getElementById('mcu_pemeriksaan').value.trim(),
+                diagnosa: document.getElementById('mcu_diagnosa').value.trim(),
+                pengobatan: document.getElementById('mcu_pengobatan').value.trim(),
+                signer: document.getElementById('mcu_signer').value.trim(),
+                signerTitle: document.getElementById('mcu_signer_title').value.trim()
+            };
+
+            const content = [
+                'Nama: ' + (values.nama || '___________________'),
+                'Umur: ' + (values.umur || '______ Tahun'),
+                'Jenis Kelamin: ' + values.jenisKelamin,
+                'Pekerjaan: ' + (values.pekerjaan || '___________________'),
+                'Perusahaan: ' + (values.perusahaan || 'PT SIGMA / Greatwall Drilling Asia Pasific'),
+                'Alamat: ' + (values.alamat || '___________________'),
+                'Blood Type: ' + (values.bloodType || '-'),
+                'NIK: ' + (values.nik || '___________________'),
+                'MCU Requirement: ' + values.requirement,
+                'Date MCU: ' + (formatDateId(values.dateMcu) || formatDateId(values.tglSurat)),
+                'Location MCU: ' + (values.locationMcu || 'RS Mutia Sari Duri'),
+                'Location Job: ' + (values.locationJob || 'Field Worker / Pekerja Rig'),
+                'Rig Location: ' + (values.rigLocation || 'Drilling GW _____'),
+                'Keluhan: ' + (values.keluhan || '-'),
+                'Pemeriksaan: ' + (values.pemeriksaan || '-'),
+                'Diagnosa: ' + (values.diagnosa || '-'),
+                'Pengobatan: ' + (values.pengobatan || '-'),
+                'Signer: ' + (values.signer || 'Rifqi Haidi'),
+                'Signer Title: ' + (values.signerTitle || 'HSE Coordinator PT GDAP')
+            ].join('\n');
+
+            document.getElementById('isi_surat').value = content;
+            document.getElementById('isi_surat_generated').value = content;
+            updateMcuPreview(values);
+        }
+
+        function updateMcuPreview(values = null) {
+            values = values || {
+                nama: document.getElementById('mcu_nama').value.trim(),
+                pekerjaan: document.getElementById('mcu_pekerjaan').value.trim(),
+                rigLocation: document.getElementById('mcu_rig_location').value.trim(),
+                requirement: document.getElementById('mcu_requirement').value
+            };
+
+            document.getElementById('mcup_nama').textContent = values.nama || '...';
+            document.getElementById('mcup_pekerjaan').textContent = values.pekerjaan || '...';
+            document.getElementById('mcup_rig').textContent = values.rigLocation || '...';
+            document.getElementById('mcup_type').textContent = values.requirement === 'MCU PHR (Pre-Employee)' ? 'Pre-Employee' : 'Annual-Employee';
+            document.getElementById('mcup_body').textContent = 'Surat pengantar MCU untuk ' + (values.nama || '...') + ' sebagai ' + (values.pekerjaan || '...') + ' di ' + (values.rigLocation || '...');
         }
 
         function buildMmIsi() {

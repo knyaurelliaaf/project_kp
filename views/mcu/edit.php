@@ -13,7 +13,7 @@
                     <label class="form-label fw-semibold">Derajat Kesehatan</label>
                     <select name="derajat_kesehatan" class="form-select">
                         <option value="">Pilih</option>
-                        <?php foreach (['P1','P2','P3','P4','P5'] as $d): ?>
+                        <?php foreach (['P1', 'P2', 'P3', 'P4', 'P5'] as $d): ?>
                         <option value="<?= $d ?>" <?= ($mcu['derajat_kesehatan'] ?? '') == $d ? 'selected' : '' ?>><?= $d ?></option>
                         <?php endforeach; ?>
                     </select>

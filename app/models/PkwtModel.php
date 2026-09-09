@@ -2,14 +2,15 @@
 class PkwtModel extends Model {
     protected $table = 'pkwt';
     protected $primaryKey = 'id_pkwt';
-    
+
     public function getMonitoring($rigIds, $isAllRig, $filter_rig = '', $filter_status = '', $filter_search = '', $limit = 15, $offset = 0) {
     $sql = "SELECT p.*, c.nama, c.posisi, r.kode_rig,
             DATEDIFF(p.tanggal_berakhir, CURDATE()) as sisa_hari
             FROM pkwt p
             JOIN crew c ON p.id_crew = c.id_crew
             JOIN rig r ON c.id_rig = r.id_rig
-            WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)";
+            WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)
+            AND c.status_aktif = 'aktif'";
     if (!$isAllRig && !empty($rigIds)) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
     if (!empty($filter_rig)) $sql .= " AND r.kode_rig = '" . $this->escape($filter_rig) . "'";
     if (!empty($filter_status)) {
@@ -26,7 +27,8 @@ class PkwtModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM pkwt p
                 JOIN crew c ON p.id_crew = c.id_crew
                 JOIN rig r ON c.id_rig = r.id_rig
-                WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)";
+                WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)
+                AND c.status_aktif = 'aktif'";
         if (!$isAllRig && !empty($rigIds)) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         if (!empty($filter_rig)) $sql .= " AND r.kode_rig = '" . $this->escape($filter_rig) . "'";
         if (!empty($filter_status)) {
@@ -42,6 +44,7 @@ class PkwtModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM pkwt p 
                 JOIN crew c ON p.id_crew = c.id_crew 
                 WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND p.tanggal_berakhir > DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -51,6 +54,7 @@ class PkwtModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM pkwt p 
                 JOIN crew c ON p.id_crew = c.id_crew 
                 WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND p.tanggal_berakhir BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -60,6 +64,7 @@ class PkwtModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM pkwt p 
                 JOIN crew c ON p.id_crew = c.id_crew 
                 WHERE p.id_pkwt = (SELECT MAX(id_pkwt) FROM pkwt p2 WHERE p2.id_crew = p.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND p.tanggal_berakhir < CURDATE()";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];

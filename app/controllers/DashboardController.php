@@ -3,6 +3,12 @@ class DashboardController extends Controller {
     
     public function __construct() {
         $this->requireLogin();
+        $role = $_SESSION['user']['role'] ?? '';
+        if ($role === 'payroll') {
+            $this->redirect('payroll');
+        } elseif (in_array($role, ['admin_gaji', 'payroll_wa'])) {
+            $this->redirect('admin_gaji');
+        }
     }
     
         public function index() {
@@ -17,40 +23,44 @@ class DashboardController extends Controller {
         $isAllRig = $this->isAdminAllRig();
         $rigIds = $this->getCurrentRigIds();
         
-        // Total
+        // Total Active Crew
         $totalCrew = $crewModel->countByRig($rigIds, $isAllRig);
+        
+        // Total Surat
         $totalSurat = $suratModel->countByRig($rigIds, $isAllRig);
         
-        // Expired (record terbaru)
+        // Expired documents count (sum of all expired documents)
         $expiredBadge = $badgeModel->countExpired($rigIds, $isAllRig);
         $expiredMcu = $mcuModel->countExpired($rigIds, $isAllRig);
         $expiredSertifikat = $sertifikatModel->countExpired($rigIds, $isAllRig);
         $expiredPkwt = $pkwtModel->countExpired($rigIds, $isAllRig);
         $totalExpired = $expiredBadge + $expiredMcu + $expiredSertifikat + $expiredPkwt;
         
-        // Soon (record terbaru)
+        // Soon documents count (sum of all warning documents)
         $soonBadge = $badgeModel->countSoon($rigIds, $isAllRig);
         $soonMcu = $mcuModel->countSoon($rigIds, $isAllRig);
         $soonSertifikat = $sertifikatModel->countSoon($rigIds, $isAllRig);
         $soonPkwt = $pkwtModel->countSoon($rigIds, $isAllRig);
-        $totalSoon = $soonBadge + $soonMcu + $soonSertifikat + $soonPkwt;
+        $totalWarning = $soonBadge + $soonMcu + $soonSertifikat + $soonPkwt;
         
-        // Active (record terbaru)
+        // Active document counts per category (for ring cards)
         $activeBadge = $badgeModel->countActive($rigIds, $isAllRig);
         $activeMcu = $mcuModel->countActive($rigIds, $isAllRig);
         $activeSertifikat = $sertifikatModel->countActive($rigIds, $isAllRig);
         $activePkwt = $pkwtModel->countActive($rigIds, $isAllRig);
         
-        // Compliance percentage per kategori
+        // Compliance percentage per kategori (based on total active crew)
         $badgeTotal = $totalCrew > 0 ? round(($activeBadge / $totalCrew) * 100) : 100;
         $mcuTotal = $totalCrew > 0 ? round(($activeMcu / $totalCrew) * 100) : 100;
         $sertTotal = $totalCrew > 0 ? round(($activeSertifikat / $totalCrew) * 100) : 100;
         $pkwtTotalPercent = $totalCrew > 0 ? round(($activePkwt / $totalCrew) * 100) : 100;
         
-        // Overall compliance
-        $complyPercent = $totalCrew > 0 ? round(($totalCrew - $totalExpired) / $totalCrew * 100, 1) : 100;
-        $warningPercent = $totalCrew > 0 ? round($totalSoon / $totalCrew * 100, 1) : 0;
-        $nonComplyPercent = $totalCrew > 0 ? round($totalExpired / $totalCrew * 100, 1) : 0;
+        // Overall compliance dihitung per crew
+        $complianceSummary = $crewModel->getComplianceSummary($rigIds, $isAllRig);
+        $complyPercent = $totalCrew > 0 ? round(($complianceSummary['compliant'] / $totalCrew) * 100, 1) : 100;
+        $warningPercent = $totalCrew > 0 ? round(($complianceSummary['warning'] / $totalCrew) * 100, 1) : 0;
+        $nonComplyPercent = $totalCrew > 0 ? round(($complianceSummary['non_compliant'] / $totalCrew) * 100, 1) : 0;
+        $compliantCrew = (int) $complianceSummary['compliant'];
         
         // Crew expired list
         $crewExpired = $crewModel->getExpiredCrew($rigIds, $isAllRig);
@@ -60,24 +70,54 @@ class DashboardController extends Controller {
         if ($isSuperAdmin) {
             $rigModel = $this->model('RigModel');
             $rigs = $rigModel->allActive();
-           while ($rig = $rigs->fetch_assoc()) {
-            $rId = [$rig['id_rig']];
-            $rigStats[] = [
-                'kode_rig' => $rig['kode_rig'],
-                'total_crew' => $crewModel->countByRig($rId, false),
-                'expired' => $badgeModel->countExpired($rId, false) + $mcuModel->countExpired($rId, false) + $sertifikatModel->countExpired($rId, false) + $pkwtModel->countExpired($rId, false),
-                'warning' => $badgeModel->countSoon($rId, false) + $mcuModel->countSoon($rId, false) + $sertifikatModel->countSoon($rId, false) + $pkwtModel->countSoon($rId, false),
-                'badge_expired' => $badgeModel->countExpired($rId, false),
-                'badge_warning' => $badgeModel->countSoon($rId, false),
-                'badge_valid'   => $badgeModel->countActive($rId, false),
-                'mcu_expired'   => $mcuModel->countExpired($rId, false),
-                'mcu_warning'   => $mcuModel->countSoon($rId, false),
-                'mcu_valid'     => $mcuModel->countActive($rId, false),
-                'sert_expired'  => $sertifikatModel->countExpired($rId, false),
-                'sert_warning'  => $sertifikatModel->countSoon($rId, false),
-                'sert_valid'    => $sertifikatModel->countActive($rId, false),
-            ];
+            foreach ($rigs as $rig) {
+                $rId = [$rig['id_rig']];
+                $rigStats[] = [
+                    'kode_rig' => $rig['kode_rig'],
+                    'total_crew' => $crewModel->countByRig($rId, false),
+                    'expired' => $badgeModel->countExpired($rId, false) + $mcuModel->countExpired($rId, false) + $sertifikatModel->countExpired($rId, false) + $pkwtModel->countExpired($rId, false),
+                    'warning' => $badgeModel->countSoon($rId, false) + $mcuModel->countSoon($rId, false) + $sertifikatModel->countSoon($rId, false) + $pkwtModel->countSoon($rId, false),
+                    'badge_expired' => $badgeModel->countExpired($rId, false),
+                    'badge_warning' => $badgeModel->countSoon($rId, false),
+                    'badge_valid'   => $badgeModel->countActive($rId, false),
+                    'mcu_expired'   => $mcuModel->countExpired($rId, false),
+                    'mcu_warning'   => $mcuModel->countSoon($rId, false),
+                    'mcu_valid'     => $mcuModel->countActive($rId, false),
+                    'sert_expired'  => $sertifikatModel->countExpired($rId, false),
+                    'sert_warning'  => $sertifikatModel->countSoon($rId, false),
+                    'sert_valid'    => $sertifikatModel->countActive($rId, false),
+                    'pkwt_expired'  => $pkwtModel->countExpired($rId, false),
+                    'pkwt_warning'  => $pkwtModel->countSoon($rId, false),
+                    'pkwt_valid'    => $pkwtModel->countActive($rId, false),
+                ];
+            }
         }
+        
+        // If not superadmin, build rigStats for accessible rigs only
+        if (!$isSuperAdmin && !empty($rigIds)) {
+            $rigModel = $this->model('RigModel');
+            $rigs = $rigModel->getRigsByIds($rigIds);
+            foreach ($rigs as $rig) {
+                $rId = [$rig['id_rig']];
+                $rigStats[] = [
+                    'kode_rig' => $rig['kode_rig'],
+                    'total_crew' => $crewModel->countByRig($rId, false),
+                    'expired' => $badgeModel->countExpired($rId, false) + $mcuModel->countExpired($rId, false) + $sertifikatModel->countExpired($rId, false) + $pkwtModel->countExpired($rId, false),
+                    'warning' => $badgeModel->countSoon($rId, false) + $mcuModel->countSoon($rId, false) + $sertifikatModel->countSoon($rId, false) + $pkwtModel->countSoon($rId, false),
+                    'badge_expired' => $badgeModel->countExpired($rId, false),
+                    'badge_warning' => $badgeModel->countSoon($rId, false),
+                    'badge_valid'   => $badgeModel->countActive($rId, false),
+                    'mcu_expired'   => $mcuModel->countExpired($rId, false),
+                    'mcu_warning'   => $mcuModel->countSoon($rId, false),
+                    'mcu_valid'     => $mcuModel->countActive($rId, false),
+                    'sert_expired'  => $sertifikatModel->countExpired($rId, false),
+                    'sert_warning'  => $sertifikatModel->countSoon($rId, false),
+                    'sert_valid'    => $sertifikatModel->countActive($rId, false),
+                    'pkwt_expired'  => $pkwtModel->countExpired($rId, false),
+                    'pkwt_warning'  => $pkwtModel->countSoon($rId, false),
+                    'pkwt_valid'    => $pkwtModel->countActive($rId, false),
+                ];
+            }
         }
         
         // Pagination
@@ -88,17 +128,19 @@ class DashboardController extends Controller {
         $offset = ($page - 1) * $perPage;
         $allCrew = $crewModel->getAllWithStatusPaginated($rigIds, $isAllRig, $perPage, $offset);
         
+        // Full document list for dashboard alert cards
+        $laporanModel = $this->model('LaporanModel');
+        $listExpiredDocs = $laporanModel->getExpired($rigIds, $isAllRig)->fetch_all(MYSQLI_ASSOC);
+        $listWarningDocs = $laporanModel->getWarning($rigIds, $isAllRig)->fetch_all(MYSQLI_ASSOC);
+        
         $data = [
             'title' => 'Dashboard',
             'currentPage' => 'dashboard',
             'totalCrew' => $totalCrew,
+            'totalCrewAll' => $totalCrewAll,
             'totalSurat' => $totalSurat,
-            'expiredBadge' => $expiredBadge,
-            'expiredMcu' => $expiredMcu,
-            'expiredSertifikat' => $expiredSertifikat,
-            'expiredPkwt' => $expiredPkwt,
-            'totalExpired' => $totalExpired,
-            'totalWarning' => $totalSoon,
+            'totalExpired' => count($listExpiredDocs),
+            'totalWarning' => count($listWarningDocs),
             'badgeTotal' => $badgeTotal,
             'mcuTotal' => $mcuTotal,
             'sertTotal' => $sertTotal,
@@ -106,11 +148,13 @@ class DashboardController extends Controller {
             'complyPercent' => $complyPercent,
             'warningPercent' => $warningPercent,
             'nonComplyPercent' => $nonComplyPercent,
+            'compliantCrew' => $compliantCrew,
             'crewExpired' => $crewExpired,
+            'listExpiredDocs' => $listExpiredDocs,
+            'listWarningDocs' => $listWarningDocs,
             'rigStats' => $rigStats,
             'page' => $page,
             'totalPages' => $totalPages,
-            'totalCrewAll' => $totalCrewAll,
             'offset' => $offset,
             'allCrew' => $allCrew
         ];

@@ -1,0 +1,13 @@
+{
+  "name": "wa-slip-gaji",
+  "version": "1.0.0",
+  "description": "WhatsApp Slip Gaji Sender Service",
+  "main": "send.js",
+  "scripts": {
+    "start": "node send.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.23.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}

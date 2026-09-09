@@ -11,6 +11,19 @@ class Model {
         $this->db = $database->connect();
     }
 
+    public function getDb() {
+        $this->checkConnection();
+        return $this->db;
+    }
+
+    // Check and reconnect if connection is lost
+    private function checkConnection() {
+        if (!$this->db || !$this->db->ping()) {
+            $database = new Database();
+            $this->db = $database->connect();
+        }
+    }
+
     // SELECT semua data
     public function all($orderBy = null, $order = 'ASC') {
         $sql = "SELECT * FROM {$this->table}";
@@ -58,6 +71,7 @@ class Model {
 
     // INSERT data
     public function insert($data) {
+        $this->checkConnection();
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         
@@ -78,6 +92,7 @@ class Model {
 
     // UPDATE data
     public function update($id, $data) {
+        $this->checkConnection();
         $sets = [];
         $params = [];
         $types = '';
@@ -99,6 +114,7 @@ class Model {
 
     // DELETE data
     public function delete($id) {
+        $this->checkConnection();
         $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE {$this->primaryKey} = ?");
         $stmt->bind_param('i', $id);
         return $stmt->execute();
@@ -106,6 +122,7 @@ class Model {
 
     // Query kustom
     public function query($sql, $params = []) {
+        $this->checkConnection();
         $stmt = $this->db->prepare($sql);
         if (!empty($params)) {
             $types = '';
@@ -120,6 +137,7 @@ class Model {
 
     // Eksekusi query INSERT/UPDATE/DELETE
     public function execute($sql, $params = []) {
+        $this->checkConnection();
         $stmt = $this->db->prepare($sql);
         if (!empty($params)) {
             $types = '';

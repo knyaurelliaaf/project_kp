@@ -58,7 +58,7 @@ class PkwtController extends Controller {
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'pkwt_' . time() . '_' . $id_crew . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], 'public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
         
         $pkwtModel->insert([
@@ -87,7 +87,7 @@ class PkwtController extends Controller {
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'pkwt_' . time() . '_' . $pkwt['id_crew'] . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], 'public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
         
         $pkwtModel->update($id, [

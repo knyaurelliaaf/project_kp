@@ -11,7 +11,7 @@ class BadgeModel extends Model {
                 JOIN rig r ON c.id_rig = r.id_rig
                 WHERE b.id_badge = (
                     SELECT MAX(id_badge) FROM badge b2 WHERE b2.id_crew = b.id_crew
-                )";
+                ) AND c.status_aktif = 'aktif'";
         
         if (!$isAllRig && !empty($rigIds)) {
             $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
@@ -44,7 +44,7 @@ class BadgeModel extends Model {
                 JOIN rig r ON c.id_rig = r.id_rig
                 WHERE b.id_badge = (
                     SELECT MAX(id_badge) FROM badge b2 WHERE b2.id_crew = b.id_crew
-                )";
+                ) AND c.status_aktif = 'aktif'";
         
         if (!$isAllRig && !empty($rigIds)) {
             $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
@@ -73,6 +73,7 @@ class BadgeModel extends Model {
     $sql = "SELECT COUNT(*) as total FROM badge b 
             JOIN crew c ON b.id_crew = c.id_crew 
             WHERE b.id_badge = (SELECT MAX(id_badge) FROM badge b2 WHERE b2.id_crew = b.id_crew)
+            AND c.status_aktif = 'aktif'
             AND b.tanggal_expired > DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
     if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
     return $this->query($sql)->fetch_assoc()['total'];
@@ -82,6 +83,7 @@ class BadgeModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM badge b 
                 JOIN crew c ON b.id_crew = c.id_crew 
                 WHERE b.id_badge = (SELECT MAX(id_badge) FROM badge b2 WHERE b2.id_crew = b.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND b.tanggal_expired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -91,6 +93,7 @@ class BadgeModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM badge b 
                 JOIN crew c ON b.id_crew = c.id_crew 
                 WHERE b.id_badge = (SELECT MAX(id_badge) FROM badge b2 WHERE b2.id_crew = b.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND b.tanggal_expired < CURDATE()";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];

@@ -1,6 +1,12 @@
 <?php
 $isiSurat = $surat['isi_surat'] ?? '';
 $isSpkSurat = ($surat['kode_jenis'] ?? '') === 'SPK';
+$pkwtPayload = json_decode($isiSurat, true);
+$pkwtPayload = is_array($pkwtPayload) && ($pkwtPayload['type'] ?? '') === 'pkwt' ? $pkwtPayload : [];
+$pkwtCrewId = (int) ($pkwtPayload['id_crew'] ?? 0);
+$pkwtTemplate = $pkwtPayload['template'] ?? '';
+$pkwtStartDate = $pkwtPayload['tanggal_mulai'] ?? ($surat['tanggal_moc'] ?? '');
+$pkwtEndDate = $pkwtPayload['tanggal_berakhir'] ?? '';
 
 $scPositionOptions = [];
 $posisiModel = $this->model('MasterPosisiModel');
@@ -14,7 +20,7 @@ while ($p = $posisiList->fetch_assoc()) {
 $scRigOptions = [];
 $rigModelForSc = $this->model('RigModel');
 $rigListForSc = $rigModelForSc->allActive();
-while ($r = $rigListForSc->fetch_assoc()) {
+foreach ($rigListForSc as $r) {
     if (!empty($r['kode_rig'])) {
         $scRigOptions[] = $r['kode_rig'];
     }
@@ -314,10 +320,10 @@ require_once __DIR__ . '/../layout/header.php';
                 <?php if ($isSuperAdmin): ?>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Rig</label>
-                    <select name="id_rig" class="form-select">
-                        <?php $rigList->data_seek(0); while ($rig = $rigList->fetch_assoc()): ?>
+                    <select name="id_rig" id="edit_rig_select" class="form-select">
+                        <?php foreach ($rigList as $rig): ?>
                         <option value="<?= $rig['id_rig'] ?>" <?= $surat['id_rig'] == $rig['id_rig'] ? 'selected' : '' ?>><?= $rig['kode_rig'] ?></option>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <?php endif; ?>
@@ -351,6 +357,32 @@ require_once __DIR__ . '/../layout/header.php';
                 </div>
 
                 <input type="hidden" name="isi_surat_generated" id="isi_surat_generated" value="<?= htmlspecialchars($isiSurat) ?>">
+
+                <div id="pkwt-fields" class="col-md-12" style="display:none;">
+                    <div class="pkwt-workspace">
+                        <section class="pkwt-panel">
+                            <h5><i class="fas fa-file-contract"></i> Data PKWT</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Crew</label>
+                                    <?php $pkwtCrewLabel = ''; foreach ($crewSearchOptions as $c) { if ($pkwtCrewId === (int) $c['id']) { $pkwtCrewLabel = $c['label']; break; } } ?>
+                                    <div class="crew-search-wrap">
+                                        <input type="search" id="pkwt_crew_search" class="form-control" placeholder="Ketik nama atau posisi crew..." autocomplete="off" value="<?= htmlspecialchars($pkwtCrewLabel) ?>">
+                                        <div id="pkwt_crew_options" class="crew-options" style="display:none;"></div>
+                                    </div>
+                                    <input type="hidden" name="pkwt_id_crew" id="pkwt_id_crew" data-rig-id="<?= (int) ($surat['id_rig'] ?? 0) ?>" value="<?= $pkwtCrewId ?>">
+                                </div>
+                                <div class="col-md-6"><label class="form-label">Posisi / Template</label><select name="pkwt_template" id="pkwt_template" class="form-select"><option value="">Pilih posisi</option><?php foreach (['Accs Control','Asst Derrickman','Asst Driller','Derrickman','Electric','Floorman','Mechanic','Motorman','Mudboy','Room boy','Roustabout','Teknisi Crane','Welder'] as $tpl): ?><option value="<?= htmlspecialchars($tpl, ENT_QUOTES) ?>" <?= strcasecmp($pkwtTemplate, $tpl) === 0 ? 'selected' : '' ?>><?= htmlspecialchars($tpl) ?></option><?php endforeach; ?></select></div>
+                                <div class="col-md-6"><label class="form-label">Tanggal Mulai</label><input type="date" name="pkwt_tanggal_mulai" id="pkwt_tanggal_mulai" class="form-control" value="<?= htmlspecialchars($pkwtStartDate) ?>"></div>
+                                <div class="col-md-6"><label class="form-label">Tanggal Berakhir</label><input type="date" name="pkwt_tanggal_berakhir" id="pkwt_tanggal_berakhir" class="form-control" value="<?= htmlspecialchars($pkwtEndDate) ?>"></div>
+                            </div>
+                            <div id="pkwt_crew_info" class="pkwt-crew-info mt-3">Pilih crew, posisi, dan periode kerja PKWT.</div>
+                        </section>
+                        <aside class="pkwt-preview-wrap"><h5><i class="fas fa-eye"></i> Preview PKWT</h5><div class="pkwt-preview"><div class="st-preview-head"><div class="st-preview-title">PERJANJIAN KERJA WAKTU TERTENTU</div><div>Nomor: <?= htmlspecialchars($surat['nomor_surat']) ?></div></div><div class="st-preview-meta"><div><strong>Nama:</strong> <span id="pkwtp_nama">...</span></div><div><strong>Jabatan:</strong> <span id="pkwtp_posisi">...</span></div><div><strong>Rig:</strong> <span id="pkwtp_rig"><?= htmlspecialchars($surat['kode_rig'] ?? '-') ?></span></div><div><strong>Periode:</strong> <span id="pkwtp_periode">...</span></div></div><div class="st-preview-body"><p id="pkwtp_body">Pilih crew untuk melihat ringkasan PKWT.</p></div></div></aside>
+                    </div>
+                </div>
+
+                <?php require __DIR__ . '/partials/template_surat_baru.php'; ?>
 
                 <div id="spk-fields" class="col-md-12" style="display:none;">
                     <div class="spk-workspace">
@@ -1257,6 +1289,12 @@ require_once __DIR__ . '/../layout/header.php';
 </div>
 
 <style>
+    .pkwt-workspace { display:grid; grid-template-columns:minmax(0, 1fr) minmax(280px, .72fr); gap:20px; }
+    .pkwt-panel, .pkwt-preview-wrap { border:1px solid var(--border); border-radius:12px; background:#fff; padding:20px; }
+    .pkwt-preview-wrap { align-self:start; position:sticky; top:16px; background:#f8f8fb; }
+    .pkwt-preview { border:1px solid var(--border); border-radius:10px; background:#fff; padding:22px; font-size:13px; }
+    .pkwt-preview p { margin:0; text-align:justify; }
+    @media (max-width: 992px) { .pkwt-workspace { grid-template-columns:1fr; } .pkwt-preview-wrap { position:static; } }
     .edit-note {
         background: #fffaf0;
         border-style: dashed;
@@ -1584,12 +1622,16 @@ document.addEventListener('DOMContentLoaded', () => {
     buildCrewDropdown('skk_crew_options');
     buildCrewDropdown('ba_crew_options');
     buildCrewDropdown('sj_crew_options');
+    buildCrewDropdown('spm_mentor_options');
+    buildCrewDropdown('spm_mentee_options');
+    buildCrewDropdown('phk_crew_options');
+    buildCrewDropdown('spk_task_crew_options');
     initScPositionSelect();
 });
 
 document.addEventListener('click', (event) => {
     if (!event.target.closest('.crew-search-wrap')) {
-        ['st_crew_options', 'ska_crew_options', 'sp_crew_options', 'sr_crew_options', 'skk_crew_options', 'ba_crew_options', 'sj_crew_options'].forEach(optionsId => {
+        ['pkwt_crew_options', 'st_crew_options', 'ska_crew_options', 'sp_crew_options', 'sr_crew_options', 'skk_crew_options', 'ba_crew_options', 'sj_crew_options'].forEach(optionsId => {
             const options = document.getElementById(optionsId);
             if (options) options.style.display = 'none';
         });
@@ -1668,6 +1710,9 @@ function isMmSelected() {
 
 function toggleEditFields() {
     const isSpk = isSpkSelected();
+    const selectedCode = document.getElementById('id_jenis').options[document.getElementById('id_jenis').selectedIndex]?.getAttribute('data-kode') || '';
+    const isSpm = selectedCode === 'SPM';
+    const isPhk = selectedCode === 'PHK';
     const isSt = isStSelected();
     const isSc = isScSelected();
     const isSka = isSkaSelected();
@@ -1678,15 +1723,20 @@ function toggleEditFields() {
     const isBa = isBaSelected();
     const isSj = isSjSelected();
     const isMm = isMmSelected();
-    const isSpecial = isSpk || isSt || isSc || isSka || isSp || isSpt || isSr || isSkk || isBa || isSj || isMm;
+    const isPkwt = selectedCode === 'PKWT';
+    const isSpecial = isSpk || isSpm || isPhk || isSt || isSc || isSka || isSp || isSpt || isSr || isSkk || isBa || isSj || isMm || isPkwt;
 
     document.querySelectorAll('#umum-fields input, #umum-fields textarea, #umum-fields select').forEach(el => {
         el.disabled = isSpecial;
     });
 
     document.querySelectorAll('#spk-fields input, #spk-fields textarea, #spk-fields select').forEach(el => {
-        el.disabled = !isSpk;
+        el.disabled = true;
     });
+    document.querySelectorAll('#pkwt-fields input, #pkwt-fields textarea, #pkwt-fields select').forEach(el => el.disabled = !isPkwt);
+    document.querySelectorAll('#spm-fields input, #spm-fields textarea, #spm-fields select').forEach(el => el.disabled = !isSpm);
+    document.querySelectorAll('#phk-fields input, #phk-fields textarea, #phk-fields select').forEach(el => el.disabled = !isPhk);
+    document.querySelectorAll('#spk-task-fields input, #spk-task-fields textarea, #spk-task-fields select').forEach(el => el.disabled = !isSpk);
 
     document.querySelectorAll('#st-fields input, #st-fields textarea, #st-fields select').forEach(el => {
         el.disabled = !isSt;
@@ -1729,7 +1779,11 @@ function toggleEditFields() {
     });
 
     document.getElementById('umum-fields').style.display = isSpecial ? 'none' : 'block';
-    document.getElementById('spk-fields').style.display = isSpk ? 'block' : 'none';
+    document.getElementById('spk-fields').style.display = 'none';
+    document.getElementById('pkwt-fields').style.display = isPkwt ? 'block' : 'none';
+    document.getElementById('spm-fields').style.display = isSpm ? 'block' : 'none';
+    document.getElementById('phk-fields').style.display = isPhk ? 'block' : 'none';
+    document.getElementById('spk-task-fields').style.display = isSpk ? 'block' : 'none';
     document.getElementById('st-fields').style.display = isSt ? 'block' : 'none';
     document.getElementById('sc-fields').style.display = isSc ? 'block' : 'none';
     document.getElementById('ska-fields').style.display = isSka ? 'block' : 'none';
@@ -1741,8 +1795,11 @@ function toggleEditFields() {
     document.getElementById('sj-fields').style.display = isSj ? 'block' : 'none';
     document.getElementById('mm-fields').style.display = isMm ? 'block' : 'none';
 
-    if (isSpk) {
-        buildSpkIsi();
+    if (isPkwt) {
+        filterPkwtCrewByRig();
+        updatePkwtCrew();
+    } else if (isSpk || isSpm || isPhk) {
+        buildTemplateSuratIsi();
     } else if (isSt) {
         buildStIsi();
     } else if (isSc) {
@@ -1769,6 +1826,90 @@ function toggleEditFields() {
     }
 }
 
+function updatePkwtPreview() {
+    const mulai = document.getElementById('pkwt_tanggal_mulai')?.value || '...';
+    const berakhir = document.getElementById('pkwt_tanggal_berakhir')?.value || '...';
+    document.getElementById('pkwtp_periode').textContent = `${mulai} s/d ${berakhir}`;
+    const nama = document.getElementById('pkwtp_nama')?.textContent || 'crew';
+    document.getElementById('pkwtp_body').textContent = `PKWT akan dibuat untuk ${nama} sesuai posisi dan periode kerja yang dipilih.`;
+}
+
+function updatePkwtCrew() {
+    const crewId = document.getElementById('pkwt_id_crew')?.value || '';
+    const crew = crewSearchOptions.find(item => String(item.id) === crewId);
+    const template = document.getElementById('pkwt_template');
+    const position = crew?.posisi || '';
+    if (template && position && !template.value) {
+        const match = [...template.options].find(item => item.value.toLowerCase() === position.toLowerCase());
+        if (match) template.value = match.value;
+    }
+    document.getElementById('pkwt_crew_info').textContent = crew ? `${crew.label} — Alamat: ${crew.alamat || '-'}` : 'Pilih crew, posisi, dan periode kerja PKWT.';
+    document.getElementById('pkwtp_nama').textContent = crew?.nama || '...';
+    document.getElementById('pkwtp_posisi').textContent = crew?.posisi || template?.value || '...';
+    updatePkwtPreview();
+}
+
+function filterPkwtCrewByRig() {
+    const hidden = document.getElementById('pkwt_id_crew');
+    const options = document.getElementById('pkwt_crew_options');
+    if (!hidden || !options) return;
+    const keyword = (document.getElementById('pkwt_crew_search')?.value || '').toLowerCase().trim();
+    const rigId = hidden.dataset.rigId || '';
+    const results = crewSearchOptions.filter(item => String(item.rig) === String(rigId) && (!keyword || item.label.toLowerCase().includes(keyword)));
+    options.innerHTML = '';
+    results.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = 'crew-option'; button.textContent = item.label;
+        button.addEventListener('click', () => {
+            hidden.value = item.id;
+            document.getElementById('pkwt_crew_search').value = item.label;
+            options.style.display = 'none';
+            updatePkwtCrew();
+        });
+        options.appendChild(button);
+    });
+    options.style.display = results.length ? 'block' : 'none';
+}
+
+document.getElementById('pkwt_crew_search')?.addEventListener('focus', filterPkwtCrewByRig);
+document.getElementById('pkwt_crew_search')?.addEventListener('input', () => {
+    document.getElementById('pkwt_id_crew').value = '';
+    filterPkwtCrewByRig();
+});
+document.getElementById('edit_rig_select')?.addEventListener('change', event => {
+    const crewSelect = document.getElementById('pkwt_id_crew');
+    if (crewSelect) {
+        crewSelect.dataset.rigId = event.target.value;
+        crewSelect.value = '';
+    }
+    const search = document.getElementById('pkwt_crew_search');
+    if (search) search.value = '';
+    filterPkwtCrewByRig();
+    updatePkwtCrew();
+});
+['pkwt_tanggal_mulai', 'pkwt_tanggal_berakhir', 'pkwt_template'].forEach(id => document.getElementById(id)?.addEventListener('input', updatePkwtPreview));
+
+function buildTemplateSuratIsi() {
+    const code = document.getElementById('id_jenis').options[document.getElementById('id_jenis').selectedIndex]?.getAttribute('data-kode') || '';
+    const val = id => (document.getElementById(id)?.value || '').trim();
+    let content = '', subject = '', recipient = '', prefix = '';
+    if (code === 'SPM') { prefix = 'spm'; subject = 'Surat Penunjukan Mentor'; recipient = val('spm_mentor'); content = ['Mentor: ' + val('spm_mentor'), 'Jabatan Mentor: ' + val('spm_mentor_position'), 'Mentee: ' + val('spm_mentee'), 'Jabatan Mentee: ' + val('spm_mentee_position'), 'Periode: ' + val('spm_period'), 'Ruang Lingkup: ' + val('spm_scope'), 'Penandatangan: ' + val('spm_signer')].join('\n'); }
+    else if (code === 'PHK') { prefix = 'phk'; subject = 'Surat Pemutusan Hubungan Kerja'; recipient = val('phk_name'); content = ['Nama Karyawan: ' + val('phk_name'), 'Jabatan: ' + val('phk_position'), 'Nomor Badge: ' + val('phk_badge'), 'Tanggal Efektif: ' + val('phk_effective'), 'Alasan: ' + val('phk_reason'), 'Penandatangan: ' + val('phk_signer'), 'Jabatan Penandatangan: ' + val('phk_signer_title')].join('\n'); }
+    else if (code === 'SPK') { prefix = 'spk_task'; subject = 'Surat Tugas'; recipient = val('spk_task_name'); content = ['Nama Personel: ' + val('spk_task_name'), 'Jabatan: ' + val('spk_task_position'), 'Lokasi: ' + val('spk_task_location'), 'Periode: ' + val('spk_task_period'), 'Uraian Tugas: ' + val('spk_task_description'), 'Penandatangan: ' + val('spk_task_signer'), 'Jabatan Penandatangan: ' + val('spk_task_signer_title')].join('\n'); }
+    else return;
+    document.getElementById('isi_surat_generated').value = content;
+    const tujuan = document.getElementById(prefix + '_tujuan'); if (tujuan) tujuan.value = recipient;
+    const perihal = document.getElementById(prefix + '_perihal'); if (perihal) perihal.value = subject;
+    updateTemplateSuratPreview(code, val);
+}
+
+function updateTemplateSuratPreview(code, val) {
+    const put = (id, value, fallback = '...') => { const el = document.getElementById(id); if (el) el.textContent = value || fallback; };
+    if (code === 'SPM') { put('spmp_mentor', val('spm_mentor')); put('spmp_mentee', val('spm_mentee')); put('spmp_period', val('spm_period')); put('spmp_scope', val('spm_scope'), 'Isi ruang lingkup pendampingan akan tampil di sini.'); }
+    if (code === 'PHK') { put('phkp_name', val('phk_name')); put('phkp_position', val('phk_position')); put('phkp_effective', val('phk_effective')); put('phkp_reason', val('phk_reason'), 'Alasan atau dasar PHK akan tampil di sini.'); }
+    if (code === 'SPK') { put('spkp_name', val('spk_task_name')); put('spkp_position', val('spk_task_position')); put('spkp_location', val('spk_task_location')); put('spkp_period', val('spk_task_period')); put('spkp_description', val('spk_task_description'), 'Uraian tugas akan tampil di sini.'); }
+}
+
 function buildCrewDropdown(optionsId = 'st_crew_options') {
     const wrap = document.getElementById(optionsId);
     if (!wrap) return;
@@ -1788,6 +1929,10 @@ function buildCrewDropdown(optionsId = 'st_crew_options') {
             skk_crew_options: ['skk_crew_search', 'skk_id_crew'],
             ba_crew_options: ['ba_crew_search', 'ba_id_crew']
             ,sj_crew_options: ['sj_crew_search', 'sj_id_crew']
+            ,spm_mentor_options: ['spm_mentor_search', 'spm_mentor_crew_id']
+            ,spm_mentee_options: ['spm_mentee_search', 'spm_mentee_crew_id']
+            ,phk_crew_options: ['phk_crew_search', 'phk_crew_id']
+            ,spk_task_crew_options: ['spk_task_crew_search', 'spk_task_crew_id']
         };
         const target = targetMap[optionsId] || ['st_crew_search', 'st_id_crew'];
         button.addEventListener('click', () => selectCrewOption(item.id, item.label, target[0], optionsId, target[1]));
@@ -1823,7 +1968,7 @@ function selectCrewOption(id, label, inputId = 'st_crew_search', optionsId = 'st
     if (inputEl) inputEl.value = label;
     if (optionsEl) optionsEl.style.display = 'none';
     if (hiddenEl) hiddenEl.value = id;
-    getCrewData(id);
+    getCrewData(id, optionsId);
 }
 
 function onCrewSelect(value) {
@@ -1838,8 +1983,9 @@ function onCrewSelect(value) {
     getCrewData(crewId);
 }
 
-function getCrewData(id_crew) {
+function getCrewData(id_crew, sourceOptionsId = '') {
     if (!id_crew) return;
+    const selectedCode = document.getElementById('id_jenis').options[document.getElementById('id_jenis').selectedIndex]?.getAttribute('data-kode') || '';
 
     fetch('<?= BASE_URL ?>/ajax/getCrewData/' + id_crew)
         .then(res => res.json())
@@ -1847,7 +1993,24 @@ function getCrewData(id_crew) {
             selectedCrewData = data;
             setCrewChips(data);
             if (isSpkSelected()) {
-                buildSpkIsi();
+                document.getElementById('spk_task_name').value = data.nama || '';
+                document.getElementById('spk_task_position').value = data.posisi || '';
+                document.getElementById('spk_task_location').value = data.kode_rig || '';
+                buildTemplateSuratIsi();
+            } else if (selectedCode === 'PHK') {
+                document.getElementById('phk_name').value = data.nama || '';
+                document.getElementById('phk_position').value = data.posisi || '';
+                document.getElementById('phk_badge').value = data.nomor_badge || '';
+                buildTemplateSuratIsi();
+            } else if (selectedCode === 'SPM') {
+                if (sourceOptionsId === 'spm_mentee_options') {
+                    document.getElementById('spm_mentee').value = data.nama || '';
+                    document.getElementById('spm_mentee_position').value = data.posisi || '';
+                } else {
+                    document.getElementById('spm_mentor').value = data.nama || '';
+                    document.getElementById('spm_mentor_position').value = data.posisi || '';
+                }
+                buildTemplateSuratIsi();
             } else if (isStSelected()) {
                 applyCrewDataToStForm(data);
                 buildStIsi();
@@ -2425,12 +2588,15 @@ function buildSkkIsi() {
         place: document.getElementById('skk_place').value.trim()
     };
 
+    const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+    const displayPos = values.position ? values.position : (values.positions ? values.positions : '');
+
     const content = [
         'Kepada: ' + (values.tujuan || 'Crew terkait'),
         'Posisi: ' + (values.positions || values.position || ''),
         'Rigs: ' + (values.rigs || ''),
-        'Nama: ' + (values.name || ''),
-        'Jabatan: ' + (values.position || ''),
+        'Nama: ' + displayName,
+        'Jabatan: ' + displayPos,
         'Project: ' + (values.project || 'Drilling at PT. Greatwall Drilling Asia Pacific'),
         'Mulai Bekerja: ' + (formatDateId(values.startDate) || ''),
         'Tanggal Surat: ' + (formatDateId(values.letterDate) || formatDateId('<?= date('Y-m-d') ?>')),
@@ -2445,14 +2611,19 @@ function buildSkkIsi() {
 function updateSkkPreview(values = null) {
     if (!isSkkSelected()) return;
     values = values || {
+        tujuan: document.getElementById('skk_tujuan') ? document.getElementById('skk_tujuan').value.trim() : '',
+        positions: document.getElementById('skk_positions') ? document.getElementById('skk_positions').value.trim() : '',
         name: document.getElementById('skk_name').value.trim(),
         position: document.getElementById('skk_position').value.trim(),
         project: document.getElementById('skk_project').value.trim()
     };
-    document.getElementById('skkp_name').textContent = values.name || '...';
-    document.getElementById('skkp_position').textContent = values.position || '...';
+    const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+    const displayPos = values.position ? values.position : (values.positions ? values.positions : '-');
+
+    document.getElementById('skkp_name').textContent = displayName;
+    document.getElementById('skkp_position').textContent = displayPos;
     document.getElementById('skkp_project').textContent = values.project || '...';
-    document.getElementById('skkp_body').textContent = values.name ? 'Surat keterangan kerja untuk ' + values.name + '.' : 'Pilih crew untuk mengisi otomatis.';
+    document.getElementById('skkp_body').textContent = 'Surat keterangan kerja untuk ' + displayName + (displayPos && displayPos !== '-' ? ' (' + displayPos + ')' : '') + ' di ' + (values.project || 'PT. Greatwall Drilling Asia Pacific') + '.';
 }
 
 function buildBaIsi() {
@@ -2477,13 +2648,17 @@ function buildBaIsi() {
         signerHse: document.getElementById('ba_signer_hse').value.trim()
     };
 
+    const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+    const displayPos = values.position ? values.position : (values.positions ? values.positions : '');
+    const displayRig = values.rig ? values.rig : (values.rigs ? values.rigs : '');
+
     const content = [
         'Kepada: ' + (values.tujuan || 'Crew terkait'),
         'Posisi: ' + (values.positions || values.position || ''),
         'Rigs: ' + (values.rigs || values.rig || ''),
-        'Nama: ' + (values.name || ''),
-        'Jabatan: ' + (values.position || ''),
-        'Rig: ' + (values.rig || ''),
+        'Nama: ' + displayName,
+        'Jabatan: ' + displayPos,
+        'Rig: ' + displayRig,
         'No Kontrak: ' + (values.contract || 'SPHR00618A'),
         'Start OJT: ' + (formatDateId(values.startOjt) || ''),
         'End OJT: ' + (formatDateId(values.endOjt) || ''),
@@ -2504,12 +2679,17 @@ function buildBaIsi() {
 function updateBaPreview(values = null) {
     if (!isBaSelected()) return;
     values = values || {
+        tujuan: document.getElementById('ba_tujuan') ? document.getElementById('ba_tujuan').value.trim() : '',
         name: document.getElementById('ba_name').value.trim(),
         rig: document.getElementById('ba_rig').value.trim(),
+        rigs: document.getElementById('ba_rigs') ? document.getElementById('ba_rigs').value.trim() : '',
         result: document.getElementById('ba_result').value
     };
-    document.getElementById('bap_name').textContent = values.name || '...';
-    document.getElementById('bap_rig').textContent = values.rig || '...';
+    const displayName = values.name ? values.name : (values.tujuan ? values.tujuan : 'Crew terkait');
+    const displayRig = values.rig ? values.rig : (values.rigs ? values.rigs : '-');
+
+    document.getElementById('bap_name').textContent = displayName;
+    document.getElementById('bap_rig').textContent = displayRig;
     document.getElementById('bap_result').textContent = values.result || 'Passed';
 }
 

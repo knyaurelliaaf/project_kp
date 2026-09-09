@@ -7,6 +7,7 @@ class McuModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM mcu m 
                 JOIN crew c ON m.id_crew = c.id_crew 
                 WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND m.expired < CURDATE()";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -16,6 +17,7 @@ class McuModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM mcu m 
                 JOIN crew c ON m.id_crew = c.id_crew 
                 WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND m.expired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -25,6 +27,7 @@ class McuModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM mcu m 
                 JOIN crew c ON m.id_crew = c.id_crew 
                 WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND m.expired > DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -34,6 +37,7 @@ class McuModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM mcu m 
                 JOIN crew c ON m.id_crew = c.id_crew 
                 WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND m.expired < CURDATE() AND c.id_rig = " . intval($id_rig);
         return $this->query($sql)->fetch_assoc()['total'];
     }
@@ -42,6 +46,7 @@ class McuModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM mcu m 
                 JOIN crew c ON m.id_crew = c.id_crew 
                 WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND m.expired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) 
                 AND c.id_rig = " . intval($id_rig);
         return $this->query($sql)->fetch_assoc()['total'];
@@ -60,7 +65,8 @@ class McuModel extends Model {
                 FROM mcu m
                 JOIN crew c ON m.id_crew = c.id_crew
                 JOIN rig r ON c.id_rig = r.id_rig
-                WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)";
+                WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'";
         
         if (!$isAllRig && !empty($rigIds)) {
             $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
@@ -85,7 +91,8 @@ class McuModel extends Model {
         $sql = "SELECT COUNT(*) as total FROM mcu m
                 JOIN crew c ON m.id_crew = c.id_crew
                 JOIN rig r ON c.id_rig = r.id_rig
-                WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)";
+                WHERE m.id_mcu = (SELECT MAX(id_mcu) FROM mcu m2 WHERE m2.id_crew = m.id_crew)
+                AND c.status_aktif = 'aktif'";
         if (!$isAllRig && !empty($rigIds)) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         if (!empty($filter_rig)) $sql .= " AND r.kode_rig = '" . $this->escape($filter_rig) . "'";
         if (!empty($filter_status)) {

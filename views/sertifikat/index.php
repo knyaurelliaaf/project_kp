@@ -4,6 +4,36 @@
     <h4><i class="fas fa-certificate"></i> Monitoring Sertifikat</h4>
 </div>
 
+<?php if (($expiredCount ?? 0) > 0 || ($soonCount ?? 0) > 0): ?>
+<div class="alert alert-expired-banner d-flex align-items-center justify-content-between p-3 mb-3">
+    <div class="d-flex align-items-center gap-3">
+        <div class="alert-icon-box text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; font-size: 18px; flex-shrink: 0; background: var(--p700, #B03060);">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div>
+            <h6 class="mb-1 fw-bold" style="color: var(--p900, #7D2645);"><i class="fas fa-bell me-1"></i> Perhatian: Sertifikat Crew Membutuhkan Tindakan</h6>
+            <div class="small text-dark">
+                <?php if (($expiredCount ?? 0) > 0): ?>
+                    <span class="badge bg-danger me-1" style="font-size:12px;"><i class="fas fa-times-circle"></i> <?= $expiredCount ?> Kadaluarsa (Expired)</span>
+                <?php endif; ?>
+                <?php if (($soonCount ?? 0) > 0): ?>
+                    <span class="badge bg-warning text-dark me-1" style="font-size:12px;"><i class="fas fa-clock"></i> <?= $soonCount ?> Akan Kadaluarsa (≤30 hari)</span>
+                <?php endif; ?>
+                <span class="text-muted ms-1">• Segera lakukan perpanjangan sertifikat crew.</span>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <?php if (($expiredCount ?? 0) > 0): ?>
+            <a href="<?= BASE_URL ?>/sertifikat?status=exp" class="btn btn-sm btn-danger shadow-sm"><i class="fas fa-filter me-1"></i> Lihat Expired</a>
+        <?php endif; ?>
+        <?php if (($soonCount ?? 0) > 0): ?>
+            <a href="<?= BASE_URL ?>/sertifikat?status=soon" class="btn btn-sm btn-warning text-dark shadow-sm"><i class="fas fa-clock me-1"></i> Lihat Warning</a>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="filter-bar mb-3">
     <form onsubmit="return false;" class="row g-2 align-items-end">
         <?php if ($isSuperAdmin): ?>
@@ -11,9 +41,9 @@
             <label class="form-label small">Rig</label>
             <select name="rig" class="form-select form-select-sm" id="filter-rig">
                 <option value="">Semua</option>
-                <?php $rigList->data_seek(0); while ($rig = $rigList->fetch_assoc()): ?>
+                <?php foreach ($rigList as $rig): ?>
                 <option value="<?= $rig['kode_rig'] ?>" <?= $filter_rig == $rig['kode_rig'] ? 'selected' : '' ?>><?= $rig['kode_rig'] ?></option>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </select>
         </div>
         <?php endif; ?>
@@ -43,7 +73,7 @@
     </div>
     <div class="tw">
         <table>
-            <thead><tr><th>#</th><th>Nama Crew</th><th>Rig</th><th>Jenis</th><th>Expired</th><th>Sisa Hari</th><th>Status</th><th>Aksi</th></tr></thead>
+            <thead><tr><th>#</th><th>Nama Crew</th><th>Rig</th><th>Posisi</th><th>Jenis</th><th>Expired</th><th>Sisa Hari</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody id="sert-tbody">
                 <?php if ($serts && $serts->num_rows > 0): $no = $offset; ?>
                     <?php while ($s = $serts->fetch_assoc()): $no++;
@@ -53,13 +83,14 @@
                     ?>
                     <tr>
                         <td class="td-muted"><?= $no ?></td>
-                        <td><a href="<?= BASE_URL ?>/crew/detail/<?= $s['id_crew'] ?>" class="cn-link"><strong><?= $s['nama'] ?></strong></a></td>
+                        <td><a href="<?= BASE_URL ?>/crew/detail/<?= $s['id_crew'] ?>?from=sertifikat" class="cn-link"><strong><?= $s['nama'] ?></strong></a></td>
                         <td><span class="rtag"><?= $s['kode_rig'] ?></span></td>
+                        <td><?= $s['posisi'] ?? '-' ?></td>
                         <td><?= $s['jenis'] ?></td>
                         <td class="td-sm"><?= $s['tanggal_expired'] ? date('d/m/Y', strtotime($s['tanggal_expired'])) : '-' ?></td>
                         <td class="td-bold"><?= $sisa ?> hari</td>
                         <td><span class="db <?= $sc ?>"><?= $st ?></span></td>
-                        <td><a href="<?= BASE_URL ?>/crew/detail/<?= $s['id_crew'] ?>" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a></td>
+                        <td><a href="<?= BASE_URL ?>/crew/detail/<?= $s['id_crew'] ?>?from=sertifikat" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a></td>
                     </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
@@ -73,9 +104,7 @@
         <?php if ($totalPages > 1): ?>
             <a href="javascript:void(0)" onclick="loadSertPage(<?= $page-1 ?>)" class="btn btn-sm btn-prev <?= $page<=1?'disabled':'' ?>">&laquo;</a>
             <span id="sert-pagination-numbers" class="pagination-numbers">
-                <?php for ($p=1; $p<=min($totalPages,10); $p++): ?>
-                <a href="javascript:void(0)" onclick="loadSertPage(<?= $p ?>)" class="btn btn-sm btn-page <?= $p==$page?'active':'' ?>"><?= $p ?></a>
-                <?php endfor; ?>
+                <?= Helper::renderPaginationNumbers($page ?? 1, $totalPages ?? 1, 'loadSertPage') ?>
             </span>
             <a href="javascript:void(0)" onclick="loadSertPage(<?= $page+1 ?>)" class="btn btn-sm btn-next <?= $page>=$totalPages?'disabled':'' ?>">&raquo;</a>
         <?php endif; ?>

@@ -27,21 +27,49 @@
                 </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Crew</label>
-                <select name="regu" class="form-select">
-                    <option value="">Pilih Crew</option>
-                    <option value="A">Crew A</option>
-                    <option value="B">Crew B</option>
-                    <option value="C">Crew C</option>
-                </select>
-            </div>
+                    <label class="form-label fw-semibold">Crew</label>
+                    <select name="regu" class="form-select">
+                        <option value="">Pilih Crew</option>
+                        <option value="A">Crew A</option>
+                        <option value="B">Crew B</option>
+                        <option value="C">Crew C</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">NIK KTP</label>
+                    <input type="text" name="nik_ktp" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">No. Telp</label>
+                    <input type="text" name="no_telp" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Tempat Lahir</label>
+                    <input type="text" name="tempat_lahir" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Tanggal Lahir</label>
+                    <input type="date" name="tanggal_lahir" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Tanggal / Periode Masuk</label>
+                    <input type="date" name="tanggal_masuk" class="form-control" value="<?= date('Y-m-d') ?>">
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-semibold">Alamat</label>
+                    <textarea name="alamat" class="form-control" rows="2"></textarea>
+                </div>
                 <?php if ($isSuperAdmin): ?>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Rig</label>
                     <select name="id_rig" class="form-select" required>
-                        <?php while ($rig = $rigs->fetch_assoc()): ?>
+                        <?php foreach ($rigs as $rig): ?>
                         <option value="<?= $rig['id_rig'] ?>"><?= $rig['kode_rig'] ?></option>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <?php else: ?>

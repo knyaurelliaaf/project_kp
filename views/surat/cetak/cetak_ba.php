@@ -42,6 +42,10 @@ $rigs = ba_pick_value($isiSurat, ['Rigs', 'Rig'], '');
 $nama = ba_pick_value($isiSurat, ['Nama', 'Nama Crew'], '');
 $posisi = ba_pick_value($isiSurat, ['Jabatan', 'Posisi'], '');
 $rig = ba_pick_value($isiSurat, ['Rig'], '');
+
+$displayName = $nama ?: ($tujuan ?: 'Crew terkait');
+$displayPosisi = $posisi ?: ($positions ?: '-');
+
 $kontrak = ba_pick_value($isiSurat, ['No Kontrak', 'Nomor Kontrak'], '');
 $startOjt = ba_pick_value($isiSurat, ['Start OJT', 'OJT Start'], '');
 $endOjt = ba_pick_value($isiSurat, ['End OJT', 'OJT End'], '');
@@ -157,6 +161,20 @@ if (strpos($rigShort, 'GW-') === false && strpos($rigShort, 'GW') !== false) {
             </section>
 
             <main class="content">
+                <td class="sigma-cell">
+                    <img src="<?= BASE_URL ?>/public/img/tsi.jpg" alt="TSI">
+                </td>
+            </tr>
+        </table>
+
+        <div class="content-wrap">
+
+            <section class="title">
+                <h1>BERITA ACARA EVALUASI HASIL ASSESSMENT & OJT CREW PENGGANTI RIG DRILLING <?= htmlspecialchars($rigShort) ?></h1>
+                <div class="number">No: <?= htmlspecialchars($nomorSurat) ?></div>
+            </section>
+
+            <main class="content">
                 <div class="body-copy">
                     Berita acara ini dibuat oleh 3 pilar <?= htmlspecialchars($rigShort) ?> (RSM/Rig Supt., DSR, dan FHL) dengan tujuan untuk melakukan <span class="mark">Verifikasi & Validasi</span> kelulusan OJT, <span class="mark">Familiariasasi</span> dan assessment personel Rig Drilling <?= htmlspecialchars($rigShort) ?> dengan nomor Kontrak <?= htmlspecialchars($kontrak ?: 'SPHR00618A') ?> yang dilakukan pada hari <?= htmlspecialchars($assessmentDateWithDay ?: 'Kamis, 18 Juni 2026') ?>. Berdasarkan <span class="mark">Verifikasi & Validasi</span> tersebut, personel di bawah ini dinyatakan lulus karena sudah memenuhi persyaratan sesuai kontrak dan dari hasil assessment yang sudah dilakukan.
                 </div>
@@ -176,8 +194,8 @@ if (strpos($rigShort, 'GW-') === false && strpos($rigShort, 'GW') !== false) {
                     <tbody>
                         <tr>
                             <td>1</td>
-                            <td class="left"><strong><?= htmlspecialchars($nama ?: '___________________') ?></strong></td>
-                            <td><?= htmlspecialchars($posisi ?: '___________________') ?></td>
+                            <td class="left"><strong><?= htmlspecialchars($displayName) ?></strong></td>
+                            <td><?= htmlspecialchars($displayPosisi) ?></td>
                             <td><?= htmlspecialchars($startOjtText ?: '___________________') ?></td>
                             <td><?= htmlspecialchars($endOjtText ?: '___________________') ?></td>
                             <td><?= htmlspecialchars($assessmentDateText ?: '___________________') ?></td>

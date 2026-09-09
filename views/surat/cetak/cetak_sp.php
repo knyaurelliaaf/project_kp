@@ -2,6 +2,7 @@
 $nomorSurat = $surat['nomor_surat'] ?? ($nomor_surat ?? '');
 $isiSurat = $surat['isi_surat'] ?? ($isi_surat ?? '');
 $tanggalMoc = $surat['tanggal_moc'] ?? ($tanggal_moc ?? date('Y-m-d'));
+$kopSurat = BASE_URL . '/public/img/kop-surat-1.png';
 
 function sp_pick_value($text, $labels, $default = '')
 {
@@ -327,7 +328,7 @@ if ($effectiveEnd !== '') {
 </head>
 <body>
     <div class="page">
-        <img class="kop" src="<?= BASE_URL ?>/public/img/kop-surat.png" alt="Kop Surat PT ADK Enam Indonesia">
+        <img class="kop" src="<?= $kopSurat ?>" alt="Kop Surat PT ADK Enam Indonesia">
 
         <section class="title">
             <h1><?= htmlspecialchars($letterTitle) ?></h1>

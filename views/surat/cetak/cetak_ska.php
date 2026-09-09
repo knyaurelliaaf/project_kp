@@ -2,6 +2,7 @@
 $nomorSurat = $surat['nomor_surat'] ?? ($nomor_surat ?? '');
 $isiSurat = $surat['isi_surat'] ?? ($isi_surat ?? '');
 $tanggalMoc = $surat['tanggal_moc'] ?? ($tanggal_moc ?? date('Y-m-d'));
+$kopSurat = BASE_URL . '/public/img/kop-surat.png';
 
 function ska_pick_value($text, $labels, $default = '')
 {
@@ -99,20 +100,20 @@ if ($activeSentence === '') {
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 3.5mm 15mm 13mm;
+            padding: 0 15mm 13mm;
             background: #fff;
         }
 
         .kop {
             display: block;
-            width: 100%;
-            max-width: 186mm;
-            margin: 0 auto;
+            width: calc(100% + 30mm);
+            max-width: none;
+            margin: 0 -15mm;
             height: auto;
         }
 
         .title {
-            margin-top: 1mm;
+            margin-top: 4mm;
             text-align: center;
             line-height: 1.15;
         }
@@ -222,7 +223,7 @@ if ($activeSentence === '') {
                 width: auto;
                 min-height: auto;
                 margin: 0;
-                padding: 3.5mm 15mm 13mm;
+                padding: 0 15mm 13mm;
             }
 
             .kop,
@@ -239,7 +240,7 @@ if ($activeSentence === '') {
 </head>
 <body>
     <div class="page">
-        <img class="kop" src="<?= BASE_URL ?>/public/img/kop-surat-1.png" alt="Kop Surat PT ADK Enam Indonesia">
+        <img class="kop" src="<?= $kopSurat1 ?>" alt="Kop Surat PT ADK Enam Indonesia">
 
         <section class="title">
             <h1><?= htmlspecialchars($letterTitle) ?></h1>

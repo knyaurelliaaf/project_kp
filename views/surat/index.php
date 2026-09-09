@@ -10,18 +10,7 @@
 <!-- Filter -->
 <div class="filter-bar mb-3">
     <form method="GET" action="<?= BASE_URL ?>/surat" class="row g-2 align-items-end" id="filter-form">
-        <?php if ($isSuperAdmin): ?>
-            <div class="col-md-2">
-                <label class="form-label small">Rig</label>
-                <select name="rig" class="form-select form-select-sm" id="filter-rig">
-                    <option value="">Semua</option>
-                    <?php while ($rig = $rigList->fetch_assoc()): ?>
-                        <option value="<?= $rig['kode_rig'] ?>" <?= $filter_rig == $rig['kode_rig'] ? 'selected' : '' ?>><?= $rig['kode_rig'] ?></option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-        <?php endif; ?>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <label class="form-label small">Jenis</label>
             <select name="jenis" class="form-select form-select-sm" id="filter-jenis">
                 <option value="">Semua</option>
@@ -30,7 +19,7 @@
                 <?php endwhile; ?>
             </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <label class="form-label small">Tahun</label>
             <select name="tahun" class="form-select form-select-sm" id="filter-tahun">
                 <option value="">Semua</option>
@@ -39,13 +28,12 @@
                 <?php endfor; ?>
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label small">Cari</label>
             <input type="text" name="search" class="form-control form-control-sm" id="filter-search" placeholder="Nomor surat atau keterangan..." value="<?= htmlspecialchars($filter_search) ?>">
         </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-sm btn-sigma"><i class="fas fa-filter"></i> Filter</button>
-            <a href="<?= BASE_URL ?>/surat" class="btn btn-sm btn-outline-secondary"><i class="fas fa-sync-alt"></i></a>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-sm btn-sigma w-100"><i class="fas fa-filter"></i> Filter</button>
         </div>
     </form>
 </div>
@@ -73,7 +61,7 @@
                     <?php while ($s = $surat->fetch_assoc()): $no++; ?>
                         <tr>
                             <td class="td-muted"><?= $no ?></td>
-                            <td><strong class="cn"><?= $s['nomor_surat'] ?></strong></td>
+                            <td><strong class="cn"><?= $s['kode_jenis'] === 'MCU' ? '-' : htmlspecialchars($s['nomor_surat']) ?></strong></td>
                             <td><span class="rtag"><?= $s['kode_jenis'] ?></span></td>
                             <td><?= $s['kode_rig'] ?></td>
                             <td class="td-sm"><?= $s['tanggal_moc'] ? date('d/m/Y', strtotime($s['tanggal_moc'])) : '-' ?></td>
@@ -102,9 +90,7 @@
         <?php if ($totalPages > 1): ?>
             <a href="javascript:void(0)" onclick="loadSuratPage(<?= $page - 1 ?>)" class="btn btn-sm btn-prev <?= $page <= 1 ? 'disabled' : '' ?>">&laquo;</a>
             <span id="surat-pagination-numbers" class="pagination-numbers">
-                <?php for ($p = 1; $p <= min($totalPages, 10); $p++): ?>
-                    <a href="javascript:void(0)" onclick="loadSuratPage(<?= $p ?>)" class="btn btn-sm btn-page <?= $p == $page ? 'active' : '' ?>"><?= $p ?></a>
-                <?php endfor; ?>
+                <?= Helper::renderPaginationNumbers($page ?? 1, $totalPages ?? 1, 'loadSuratPage') ?>
             </span>
             <a href="javascript:void(0)" onclick="loadSuratPage(<?= $page + 1 ?>)" class="btn btn-sm btn-next <?= $page >= $totalPages ? 'disabled' : '' ?>">&raquo;</a>
         <?php endif; ?>
@@ -112,15 +98,13 @@
 </div>
 
 <script>
-    function loadSuratPage(page) {
-        const rig = document.getElementById('filter-rig')?.value || '';
+    function loadSuratPage(page = 1) {
         const jenis = document.getElementById('filter-jenis')?.value || '';
         const tahun = document.getElementById('filter-tahun')?.value || '';
         const search = document.getElementById('filter-search')?.value || '';
 
         const params = new URLSearchParams({
             page,
-            rig,
             jenis,
             tahun,
             search
@@ -134,24 +118,46 @@
                 document.getElementById('total-surat').textContent = data.total;
 
                 const prevBtn = document.querySelector('#surat-pagination .btn-prev');
-                if (data.page > 1) {
-                    prevBtn.classList.remove('disabled');
-                    prevBtn.setAttribute('onclick', 'loadSuratPage(' + (data.page - 1) + ')');
-                } else {
-                    prevBtn.classList.add('disabled');
-                    prevBtn.removeAttribute('onclick');
+                if (prevBtn) {
+                    if (data.page > 1) {
+                        prevBtn.classList.remove('disabled');
+                        prevBtn.setAttribute('onclick', 'loadSuratPage(' + (data.page - 1) + ')');
+                    } else {
+                        prevBtn.classList.add('disabled');
+                        prevBtn.removeAttribute('onclick');
+                    }
                 }
 
                 const nextBtn = document.querySelector('#surat-pagination .btn-next');
-                if (data.page < data.totalPages) {
-                    nextBtn.classList.remove('disabled');
-                    nextBtn.setAttribute('onclick', 'loadSuratPage(' + (data.page + 1) + ')');
-                } else {
-                    nextBtn.classList.add('disabled');
-                    nextBtn.removeAttribute('onclick');
+                if (nextBtn) {
+                    if (data.page < data.totalPages) {
+                        nextBtn.classList.remove('disabled');
+                        nextBtn.setAttribute('onclick', 'loadSuratPage(' + (data.page + 1) + ')');
+                    } else {
+                        nextBtn.classList.add('disabled');
+                        nextBtn.removeAttribute('onclick');
+                    }
                 }
             });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('filter-form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                loadSuratPage(1);
+            });
+        }
+        document.getElementById('filter-jenis')?.addEventListener('change', () => loadSuratPage(1));
+        document.getElementById('filter-tahun')?.addEventListener('change', () => loadSuratPage(1));
+        
+        let searchTimeout;
+        document.getElementById('filter-search')?.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => loadSuratPage(1), 300);
+        });
+    });
 </script>
 
 <?php require_once __DIR__ . '/../layout/footer.php'; ?>

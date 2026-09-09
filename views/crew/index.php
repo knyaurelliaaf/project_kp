@@ -15,10 +15,9 @@
                 <label class="form-label small">Rig</label>
                 <select name="rig" class="form-select form-select-sm">
                     <option value="">Semua</option>
-                    <?php $rigList->data_seek(0);
-                    while ($rig = $rigList->fetch_assoc()): ?>
+                    <?php foreach ($rigList as $rig): ?>
                         <option value="<?= $rig['kode_rig'] ?>" <?= $filter_rig == $rig['kode_rig'] ? 'selected' : '' ?>><?= $rig['kode_rig'] ?></option>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </select>
             </div>
         <?php endif; ?>
@@ -47,7 +46,7 @@
         </div>
         <div class="col-md-3">
             <button type="submit" class="btn btn-sm btn-sigma"><i class="fas fa-filter"></i> Filter</button>
-            <a href="<?= BASE_URL ?>/crew" class="btn btn-sm btn-outline-secondary"><i class="fas fa-sync-alt"></i></a>
+            <a href="<?= BASE_URL ?>/crew?reset=1" class="btn btn-sm btn-outline-secondary" title="Reset Filter"><i class="fas fa-sync-alt"></i></a>
         </div>
     </form>
 </div>
@@ -85,6 +84,7 @@
             <tbody id="crew-tbody">
                 <?php if ($crew && $crew->num_rows > 0): $no = $offset;
                     $colors = ['#2B2A4C', '#B31312', '#0f9b58', '#7c3aed', '#0891b2', '#b45309', '#be185d', '#0369a1'];
+                    $fq = !empty($filterQuery) ? '?' . $filterQuery : '';
                 ?>
                     <?php while ($c = $crew->fetch_assoc()): $no++;
                         $bs = $c['badge_status'] ?? 'ok';
@@ -99,7 +99,7 @@
                                 <div class="crew-av">
                                     <div class="cav" style="background:<?= $colors[$no % count($colors)] ?>"><?= strtoupper(substr($c['nama'], 0, 2)) ?></div>
                                     <div>
-                                        <a href="<?= BASE_URL ?>/crew/detail/<?= $c['id_crew'] ?>" class="cn-link">
+                                        <a href="<?= BASE_URL ?>/crew/detail/<?= $c['id_crew'] ?><?= $fq ?>" class="cn-link">
                                             <div class="cn">
                                                 <?= $c['nama'] ?>
                                                 <?php if (($c['status_aktif'] ?? 'aktif') == 'nonaktif'): ?>
@@ -120,10 +120,10 @@
                             <td><?= $sl[$ps] ?></td>
                             <td>
                                 <?php $isNonaktif = ($c['status_aktif'] ?? 'aktif') == 'nonaktif'; ?>
-                                <a href="<?= BASE_URL ?>/crew/detail/<?= $c['id_crew'] ?>" class="btn btn-sm btn-outline-info" title="Detail"><i class="fas fa-eye"></i></a>
+                                <a href="<?= BASE_URL ?>/crew/detail/<?= $c['id_crew'] ?><?= $fq ?>" class="btn btn-sm btn-outline-info" title="Detail"><i class="fas fa-eye"></i></a>
 
                                 <?php if (!$isNonaktif): ?>
-                                    <a href="<?= BASE_URL ?>/crew/edit/<?= $c['id_crew'] ?>" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="<?= BASE_URL ?>/crew/edit/<?= $c['id_crew'] ?><?= $fq ?>" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
                                 <?php endif; ?>
 
                                 <a href="<?= BASE_URL ?>/crew/toggleStatus/<?= $c['id_crew'] ?>"
@@ -149,9 +149,7 @@
         <?php if ($totalPages > 1): ?>
             <a href="javascript:void(0)" onclick="loadCrewPage(<?= $page - 1 ?>)" class="btn btn-sm btn-prev <?= $page <= 1 ? 'disabled' : '' ?>">&laquo;</a>
             <span id="crew-pagination-numbers" class="pagination-numbers">
-                <?php for ($p = 1; $p <= min($totalPages, 10); $p++): ?>
-                    <a href="javascript:void(0)" onclick="loadCrewPage(<?= $p ?>)" class="btn btn-sm btn-page <?= $p == $page ? 'active' : '' ?>"><?= $p ?></a>
-                <?php endfor; ?>
+                <?= Helper::renderPaginationNumbers($page ?? 1, $totalPages ?? 1, 'loadCrewPage') ?>
             </span>
             <a href="javascript:void(0)" onclick="loadCrewPage(<?= $page + 1 ?>)" class="btn btn-sm btn-next <?= $page >= $totalPages ? 'disabled' : '' ?>">&raquo;</a>
         <?php endif; ?>
@@ -167,19 +165,23 @@
         const order = urlParams.get('order') || 'ASC';
         const status = document.querySelector('select[name="status"]')?.value || '';
         const crew = document.querySelector('select[name="crew"]')?.value || '';
-        const params = new URLSearchParams({
-            page,
-            rig,
-            search,
-            status,
-            crew,
-            sort,
-            order,
-            source: 'crew'
-        });
+        
+        const params = new URLSearchParams();
+        if (page > 1) params.set('page', page);
+        if (rig) params.set('rig', rig);
+        if (search) params.set('search', search);
+        if (status) params.set('status', status);
+        if (crew) params.set('crew', crew);
+        if (sort !== 'nama') params.set('sort', sort);
+        if (order !== 'ASC') params.set('order', order);
 
+        const fetchParams = new URLSearchParams(params);
+        fetchParams.set('source', 'crew');
+        if (!fetchParams.has('page')) fetchParams.set('page', page);
 
-        fetch('<?= BASE_URL ?>/ajax/crewTable?' + params.toString())
+        history.pushState(null, '', window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
+
+        fetch('<?= BASE_URL ?>/ajax/crewTable?' + fetchParams.toString())
             .then(res => res.json())
             .then(data => {
                 document.getElementById('crew-tbody').innerHTML = data.html;

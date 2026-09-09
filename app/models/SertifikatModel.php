@@ -11,7 +11,8 @@ class SertifikatModel extends Model
             FROM sertifikat s
             JOIN crew c ON s.id_crew = c.id_crew
             JOIN rig r ON c.id_rig = r.id_rig
-            WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)";
+            WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)
+            AND c.status_aktif = 'aktif'";
         if (!$isAllRig && !empty($rigIds)) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         if (!empty($filter_rig)) $sql .= " AND r.kode_rig = '" . $this->escape($filter_rig) . "'";
         if (!empty($filter_status)) {
@@ -29,7 +30,8 @@ class SertifikatModel extends Model
         $sql = "SELECT COUNT(*) as total FROM sertifikat s
                 JOIN crew c ON s.id_crew = c.id_crew
                 JOIN rig r ON c.id_rig = r.id_rig
-                WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)";
+                WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)
+                AND c.status_aktif = 'aktif'";
         if (!$isAllRig && !empty($rigIds)) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         if (!empty($filter_rig)) $sql .= " AND r.kode_rig = '" . $this->escape($filter_rig) . "'";
         if (!empty($filter_status)) {
@@ -46,6 +48,7 @@ class SertifikatModel extends Model
         $sql = "SELECT COUNT(*) as total FROM sertifikat s 
                 JOIN crew c ON s.id_crew = c.id_crew 
                 WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND s.tanggal_expired > DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -56,6 +59,7 @@ class SertifikatModel extends Model
         $sql = "SELECT COUNT(*) as total FROM sertifikat s 
                 JOIN crew c ON s.id_crew = c.id_crew 
                 WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND s.tanggal_expired BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];
@@ -66,6 +70,7 @@ class SertifikatModel extends Model
         $sql = "SELECT COUNT(*) as total FROM sertifikat s 
                 JOIN crew c ON s.id_crew = c.id_crew 
                 WHERE s.id_sertifikat = (SELECT MAX(id_sertifikat) FROM sertifikat s2 WHERE s2.id_crew = s.id_crew)
+                AND c.status_aktif = 'aktif'
                 AND s.tanggal_expired < CURDATE()";
         if (!$isAllRig) $sql .= " AND c.id_rig IN (" . implode(',', $rigIds) . ")";
         return $this->query($sql)->fetch_assoc()['total'];

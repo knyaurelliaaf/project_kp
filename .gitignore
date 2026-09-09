@@ -5,3 +5,13 @@
 .htaccess 
 vendor/ 
 composer.lock 
+scripts_backup/
+*.zip
+node_modules/
+wa_service_v2/node_modules/
+wa_service_v2/whatsapp-session/
+wa_service_v2/uploads/
+wa_service/node_modules/
+wa_service/whatsapp-session/
+wa_service/uploads/
+scratch/

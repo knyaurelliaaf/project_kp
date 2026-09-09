@@ -25,11 +25,13 @@ class McuController extends Controller {
         $offset = ($page - 1) * $perPage;
         
         $mcus = $mcuModel->getMonitoring($rigIds, $isAllRig, $filter_rig, $filter_status, $filter_search, $perPage, $offset);
+        $expiredCount = $mcuModel->countExpired($rigIds, $isAllRig);
+        $soonCount = $mcuModel->countSoon($rigIds, $isAllRig);
         $rigList = $rigModel->allActive();
         
         $data = [
             'title' => 'Monitoring MCU',
-            'currentPage' => 'monitoring',
+            'currentPage' => 'mcu',
             'mcus' => $mcus,
             'rigList' => $rigList,
             'isSuperAdmin' => $isSuperAdmin,
@@ -39,13 +41,15 @@ class McuController extends Controller {
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
+            'expiredCount' => $expiredCount,
+            'soonCount' => $soonCount,
             'offset' => $offset
         ];
         $this->view('mcu/index', $data);
     }
     
     public function create($id_crew) {
-        $data = ['title' => 'Tambah MCU', 'currentPage' => 'crew', 'id_crew' => $id_crew];
+        $data = ['title' => 'Tambah MCU', 'currentPage' => 'mcu', 'id_crew' => $id_crew];
         $this->view('mcu/create', $data);
     }
     
@@ -58,15 +62,15 @@ class McuController extends Controller {
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'mcu_' . time() . '_' . $id_crew . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], 'public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
         
         $mcuModel->insert([
-        'id_crew' => $id_crew,
-        'expired' => !empty($_POST['expired']) ? $_POST['expired'] : null,
-        'derajat_kesehatan' => $_POST['derajat_kesehatan'] ?? null,
-        'file' => $fileName
-    ]);
+            'id_crew' => $id_crew,
+            'expired' => !empty($_POST['expired']) ? $_POST['expired'] : null,
+            'derajat_kesehatan' => $_POST['derajat_kesehatan'] ?? null,
+            'file' => $fileName
+        ]);
        
         Helper::setFlash('success', 'MCU berhasil ditambahkan!');
         $this->redirect('crew/detail/' . $id_crew);
@@ -75,7 +79,7 @@ class McuController extends Controller {
     public function edit($id) {
         $mcu = $this->model('McuModel')->find($id);
         if (!$mcu) $this->redirect('crew');
-        $data = ['title' => 'Edit MCU', 'currentPage' => 'crew', 'mcu' => $mcu];
+        $data = ['title' => 'Edit MCU', 'currentPage' => 'mcu', 'mcu' => $mcu];
         $this->view('mcu/edit', $data);
     }
     
@@ -88,14 +92,14 @@ class McuController extends Controller {
         if (!empty($_FILES['file']['name'])) {
             $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
             $fileName = 'mcu_' . time() . '_' . $mcu['id_crew'] . '.' . $ext;
-            move_uploaded_file($_FILES['file']['tmp_name'], 'public/uploads/' . $fileName);
+            move_uploaded_file($_FILES['file']['tmp_name'], dirname(__DIR__, 2) . '/public/uploads/' . $fileName);
         }
         
         $mcuModel->update($id, [
-        'expired' => !empty($_POST['expired']) ? $_POST['expired'] : null,
-        'derajat_kesehatan' => $_POST['derajat_kesehatan'] ?? null,
-        'file' => $fileName
-    ]);
+            'expired' => !empty($_POST['expired']) ? $_POST['expired'] : null,
+            'derajat_kesehatan' => $_POST['derajat_kesehatan'] ?? null,
+            'file' => $fileName
+        ]);
         Helper::setFlash('success', 'MCU berhasil diupdate!');
         $this->redirect('crew/detail/' . $mcu['id_crew']);
     }

@@ -84,4 +84,83 @@ class Helper {
         echo '</pre>';
         die();
     }
+
+    // Log Error Otomatis ke File (Sangat berguna di Hosting)
+    public static function logError($message, $context = []) {
+        $logDir = __DIR__ . '/../app/logs';
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0777, true);
+        }
+        $logFile = $logDir . '/app_error.log';
+        $timestamp = date('Y-m-d H:i:s');
+        $user = $_SESSION['user']['nama'] ?? $_SESSION['user']['username'] ?? 'System';
+        $contextStr = !empty($context) ? ' | ' . json_encode($context) : '';
+        $logLine = "[{$timestamp}] [User: {$user}] [ERROR] {$message}{$contextStr}" . PHP_EOL;
+        @file_put_contents($logFile, $logLine, FILE_APPEND);
+    }
+
+    // Baca Log Error
+    public static function getLogs($lines = 100) {
+        $logFile = __DIR__ . '/../app/logs/app_error.log';
+        if (!file_exists($logFile)) return [];
+        $file = file($logFile);
+        return array_slice($file, -$lines);
+    }
+
+    /**
+     * Generate array halaman dengan ellipsis agar paginasi tidak terlalu panjang.
+     * Contoh hasil: [1, '...', 10, 11, 12, 13, 14, '...', 22]
+     */
+    public static function getPaginationRange($currentPage, $totalPages, $delta = 2) {
+        $currentPage = (int)$currentPage;
+        $totalPages = (int)$totalPages;
+        if ($totalPages <= 1) return [];
+
+        $delta = (int)$delta;
+        $range = [];
+        $rangeWithEllipsis = [];
+
+        $start = max(2, $currentPage - $delta);
+        $end = min($totalPages - 1, $currentPage + $delta);
+
+        $range[] = 1;
+        for ($i = $start; $i <= $end; $i++) {
+            $range[] = $i;
+        }
+        if ($totalPages > 1) {
+            $range[] = $totalPages;
+        }
+
+        $prev = 0;
+        foreach ($range as $page) {
+            if ($prev > 0) {
+                if ($page - $prev === 2) {
+                    $rangeWithEllipsis[] = $prev + 1;
+                } elseif ($page - $prev > 2) {
+                    $rangeWithEllipsis[] = '...';
+                }
+            }
+            $rangeWithEllipsis[] = $page;
+            $prev = $page;
+        }
+
+        return $rangeWithEllipsis;
+    }
+
+    /**
+     * Render HTML tombol angka paginasi dengan batas maksimal/ellipsis.
+     */
+    public static function renderPaginationNumbers($currentPage, $totalPages, $onclickFunc = 'loadPage') {
+        $pages = self::getPaginationRange($currentPage, $totalPages);
+        $html = '';
+        foreach ($pages as $p) {
+            if ($p === '...') {
+                $html .= '<span class="btn btn-sm btn-page disabled" style="pointer-events:none;opacity:0.5;border:none;background:transparent;padding:4px 6px;">...</span>';
+            } else {
+                $active = ($p == $currentPage) ? ' active' : '';
+                $html .= '<a href="javascript:void(0)" onclick="' . htmlspecialchars($onclickFunc) . '(' . $p . ')" class="btn btn-sm btn-page' . $active . '">' . $p . '</a>';
+            }
+        }
+        return $html;
+    }
 }

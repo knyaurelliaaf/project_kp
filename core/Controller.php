@@ -64,7 +64,14 @@ class Controller {
     protected function isAdminAllRig() {
         return $this->isSuperAdmin() || empty($this->getCurrentRigIds());
     }
+    protected function preventCache() {
+        header("Cache-Control: no-cache, no-store, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+    }
+
     protected function requireLogin() {
+        $this->preventCache();
         if (!$this->isLoggedIn()) {
             $this->redirect('auth/login');
         }
