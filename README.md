@@ -1,29 +1,29 @@
-# 🚢 PT. ADK-6 Crew Compliance & Automated Payroll Slip System
+# PT. ADK-6 Crew Compliance & Automated Payroll Slip System
 
 System manajemen data crew, pemantauan kepatuhan (*compliance*), pencetakan surat kerja, dan pengiriman otomatis slip gaji PDF via WhatsApp (*WhatsApp Automation Engine*).
 
 ---
 
-## 🌟 Fitur Utama System
+##  Fitur Utama System
 
-### 1. 📊 Dashboard & Master Data Crew
+### 1.  Dashboard & Master Data Crew
 * **Overview Kepatuhan Crew:** Ringkasan status aktif/nonaktif crew per Rig.
 * **Filtering & Live Search AJAX:** Pencarian cepat berdasarkan Rig, Posisi, Crew (A/B/C/D), dan Status tanpa reload halaman.
 * **Multi-Rig Assignment:** Hak akses pengguna terisolasi sesuai Rig yang ditugaskan.
 
-### 2. 🛡️ Compliance Monitoring (Kepatuhan Work Readiness)
+### 2. Compliance Monitoring (Kepatuhan Work Readiness)
 * **Pemeriksaan MCU (Medical Check Up):** Pemantauan derajat kesehatan dan tanggal kadaluarsa MCU.
 * **Masa Berlaku PKWT & Badge:** Notifikasi otomatis untuk kontrak kerja dan badge yang mendekati masa *expired*.
 * **Sertifikat Kerja & Keterampilan:** Inventarisasi dan pencatatan sertifikat keselamatan kerja crew.
 
-### 3. 📄 Sistem Administrasi & Pencetakan Surat
+### 3. Sistem Administrasi & Pencetakan Surat
 * Pencetakan surat otomatis dengan format standar perusahaan:
   * Surat Keterangan Asli (SKA) & Keterangan Kerja (SKK)
   * Surat Peringatan (SP) & Berita Acara (BA)
   * Surat Perjanjian Kerja Waktu Tertentu (PKWT) & Pemutusan Hubungan Kerja (PHK)
   * Surat Perintah Kerja (SPK) & Medical Check Up (MCU)
 
-### 4. 📱 Modul Admin Gaji & WhatsApp Automation Engine (`wa_service_v2`)
+### 4.  Modul Admin Gaji & WhatsApp Automation Engine (`wa_service_v2`)
 * **Upload Batch ZIP Slip Gaji:** Pengunggahan ribuan file PDF slip gaji dalam 1 berkas `.zip`.
 * **Automatic Name & File Matching:** Sistem otomatis mendeteksi nama file PDF (`NAMA - JABATAN.pdf`) dan memetakan ke nomor WhatsApp karyawan.
 * **Dual Login Method:** Dukungan scan **QR Code** dan **Kode Pairing 8-Digit**.
@@ -35,7 +35,7 @@ System manajemen data crew, pemantauan kepatuhan (*compliance*), pencetakan sura
 
 ---
 
-## 🛠️ Teknologi & Stack
+##  Teknologi & Stack
 
 * **Backend Web:** PHP (Custom Light MVC Architecture)
 * **Database:** MySQL / MariaDB (`tracker_k3` & `apd_system`)
@@ -47,7 +47,7 @@ System manajemen data crew, pemantauan kepatuhan (*compliance*), pencetakan sura
 
 ---
 
-## 🏗️ Struktur Direktori Proyek
+##  Struktur Direktori Proyek
 
 ```text
 project_kp/
@@ -71,7 +71,7 @@ project_kp/
 
 ---
 
-## 🚀 Panduan Instalasi & Cara Menjalankan Proyek
+##  Panduan Instalasi & Cara Menjalankan Proyek
 
 ### 1. Prasyarat Sistem
 * **XAMPP** dengan PHP (v7.4 atau v8.x) & MySQL/MariaDB.
@@ -132,7 +132,7 @@ project_kp/
 
 ---
 
-## 🔑 Kredensial Login Default
+##  Kredensial Login Default
 
 | Role | Email | Password Default |
 | :--- | :--- | :--- |
@@ -142,7 +142,7 @@ project_kp/
 
 ---
 
-## 📖 Alur Penggunaan Modul Admin Gaji
+##  Alur Penggunaan Modul Admin Gaji
 
 1. **Login** menggunakan akun Admin Gaji (`payroll@gmail.com` / `payroll123`).
 2. Masuk ke menu **Upload & Kirim Slip**.
@@ -152,5 +152,5 @@ project_kp/
 
 ---
 
-## 📝 Lisensi & Hak Cipta
+##  Lisensi & Hak Cipta
 © 2026 PT. ADK-6 Crew Compliance Team. All Rights Reserved.
